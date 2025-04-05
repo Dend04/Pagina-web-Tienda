@@ -6,10 +6,12 @@ CREATE TABLE "Usuario" (
     "id" BIGSERIAL NOT NULL,
     "nombre" TEXT NOT NULL,
     "username" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "direccion" TEXT NOT NULL,
     "rol" TEXT NOT NULL,
-    "telefono" TEXT,
+    "telefono" VARCHAR(15),
+    "productoId" BIGINT,
 
     CONSTRAINT "Usuario_pkey" PRIMARY KEY ("id")
 );
@@ -23,6 +25,8 @@ CREATE TABLE "Producto" (
     "costo" DECIMAL(10,2) NOT NULL,
     "foto_url" TEXT,
     "uso" TEXT,
+    "veces_comprado" BIGINT,
+    "veces_comprado_usuario" INTEGER,
 
     CONSTRAINT "Producto_pkey" PRIMARY KEY ("id")
 );
@@ -33,19 +37,11 @@ CREATE TABLE "Pedido" (
     "usuario_id" BIGINT NOT NULL,
     "fecha_pedido" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "estado" TEXT NOT NULL,
-
-    CONSTRAINT "Pedido_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "DetallePedido" (
-    "id" BIGSERIAL NOT NULL,
-    "pedido_id" BIGINT NOT NULL,
     "producto_id" BIGINT NOT NULL,
     "cantidad" INTEGER NOT NULL,
     "precio_unitario" DECIMAL(10,2) NOT NULL,
 
-    CONSTRAINT "DetallePedido_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Pedido_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -80,13 +76,13 @@ CREATE UNIQUE INDEX "Usuario_email_key" ON "Usuario"("email");
 CREATE UNIQUE INDEX "Favorito_usuario_id_producto_id_key" ON "Favorito"("usuario_id", "producto_id");
 
 -- AddForeignKey
+ALTER TABLE "Usuario" ADD CONSTRAINT "Usuario_productoId_fkey" FOREIGN KEY ("productoId") REFERENCES "Producto"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE "Pedido" ADD CONSTRAINT "Pedido_usuario_id_fkey" FOREIGN KEY ("usuario_id") REFERENCES "Usuario"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "DetallePedido" ADD CONSTRAINT "DetallePedido_pedido_id_fkey" FOREIGN KEY ("pedido_id") REFERENCES "Pedido"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "DetallePedido" ADD CONSTRAINT "DetallePedido_producto_id_fkey" FOREIGN KEY ("producto_id") REFERENCES "Producto"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Pedido" ADD CONSTRAINT "Pedido_producto_id_fkey" FOREIGN KEY ("producto_id") REFERENCES "Producto"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Notificacion" ADD CONSTRAINT "Notificacion_usuario_id_fkey" FOREIGN KEY ("usuario_id") REFERENCES "Usuario"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

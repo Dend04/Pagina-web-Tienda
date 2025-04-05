@@ -5,5 +5,12 @@ declare module 'express-serve-static-core' {
     json<T = any>(body?: T): this;
   }
 }
+declare global {
+  namespace Express {
+    interface Request {
+      userId?: bigint;
+    }
+  }
+}
 
 export type ApiResponse<T = any> = Response<T | { error: string }>;
