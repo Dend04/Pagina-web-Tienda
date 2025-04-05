@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id           BigInt    @id @default(autoincrement())
+  nombre       String
+  username     String    @unique
+  email        String    @unique
+  direccion    String
+  rol          String
+  telefono     String?
+  pedidos      Pedido[]
+  notificaciones Notificacion[]
+  favoritos    Favorito[]
+}
+
+model Producto {
+  id           BigInt    @id @default(autoincrement())
+  nombre       String
+  descripcion  String?
+  precio       Decimal   @db.Decimal(10, 2)
+  costo        Decimal   @db.Decimal(10, 2)
+  foto_url     String?
+  uso          String?
+  detalle_pedidos DetallePedido[]
+  notificaciones Notificacion[]
+  favoritos    Favorito[]
+}
+
+model Pedido {
+  id            BigInt      @id @default(autoincrement())
+  usuario_id    BigInt
+  usuario       Usuario     @relation(fields: [usuario_id], references: [id])
+  fecha_pedido  DateTime    @default(now()) @db.Timestamptz(6)
+  estado        String
+  detalles      DetallePedido[]
+}
+
+model DetallePedido {
+  id              BigInt    @id @default(autoincrement())
+  pedido_id       BigInt
+  pedido          Pedido    @relation(fields: [pedido_id], references: [id])
+  producto_id     BigInt
+  producto        Producto  @relation(fields: [producto_id], references: [id])
+  cantidad        Int
+  precio_unitario Decimal   @db.Decimal(10, 2)
+}
+
+model Notificacion {
+  id           BigInt     @id @default(autoincrement())
+  tipo         NotificacionTipo
+  usuario_id   BigInt
+  usuario      Usuario    @relation(fields: [usuario_id], references: [id])
+  producto_id  BigInt
+  producto     Producto   @relation(fields: [producto_id], references: [id])
+  mensaje      String?
+  fecha_envio  DateTime   @default(now()) @db.Timestamptz(6)
+}
+
+model Favorito {
+  id          BigInt    @id @default(autoincrement())
+  usuario_id  BigInt
+  producto_id BigInt
+  usuario     Usuario   @relation(fields: [usuario_id], references: [id])
+  producto    Producto  @relation(fields: [producto_id], references: [id])
+  creado_en   DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@unique([usuario_id, producto_id])
+}
+
+enum NotificacionTipo {
+  STOCK_BAJO
+  FAVORITO_DISPONIBLE
+  PROMOCION
+}
