@@ -9,9 +9,11 @@ import {
 
 const router = Router();
 
-router.get('/', getUsuarios);
-router.get('/:id', getUsuarioById);
-router.post('/', createUsuario);
+router.get('/', (req, res, next) => {
+  getUsuarios(req, res).catch(next);
+});
+router.get('/:id',(req, res, next) =>{getUsuarioById(req, res).catch(next);});
+router.post('/',(req, res, next) =>{createUsuario(req, res).catch(next);});
 router.put('/:id', updateUsuario);
 router.delete('/:id', deleteUsuario);
 

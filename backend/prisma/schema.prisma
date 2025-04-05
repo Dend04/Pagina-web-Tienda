@@ -14,7 +14,7 @@ model Usuario {
   email        String    @unique
   direccion    String
   rol          String
-  telefono     String?
+  telefono     String?   @db.VarChar(15)
   pedidos      Pedido[]
   notificaciones Notificacion[]
   favoritos    Favorito[]

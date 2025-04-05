@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import cors from 'cors';
 import usuarioRoutes from './routes/usuario.routes';
@@ -8,6 +8,8 @@ import pedidoRoutes from './routes/pedido.routes';
 const prisma = new PrismaClient();
 const app = express();
 const port = process.env.PORT || 3001;
+
+// Elimina el middleware typeSafeMiddleware
 
 // Configuración básica
 app.use(express.json());
@@ -25,7 +27,7 @@ app.get('/api/health', (req, res) => {
 
 // Iniciar servidor
 app.listen(port, () => {
-  console.log(`🚀 Servidor listo en http://localhost:${port}`);
+  console.log(`🚀 Servidor en http://localhost:${port}`);
 });
 
 // Cierre limpio de Prisma
