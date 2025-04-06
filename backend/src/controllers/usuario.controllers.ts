@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { ApiResponse } from "../types/express";
+import bcrypt from 'bcryptjs';
 import { z } from "zod";
 
 const prisma = new PrismaClient();
@@ -12,7 +13,7 @@ const usuarioSchema = z.object({
     .min(3)
     .regex(/^[a-z0-9_]+$/i),
   email: z.string().email(),
-  password: z.string(),
+  password: z.string().min(6),
   direccion: z.string().min(5),
   rol: z.enum(["admin", "usuario"]),
   telefono: z.string().regex(/^\d+$/).optional(),
@@ -53,7 +54,6 @@ export const createUsuario = async (
   res: ApiResponse
 ): Promise<ApiResponse> => {
   try {
-    // 1. Validar el cuerpo de la solicitud
     const result = usuarioSchema.safeParse(req.body);
 
     if (!result.success) {
@@ -63,45 +63,48 @@ export const createUsuario = async (
       });
     }
 
-    const { nombre, username,password, email, direccion, rol, telefono } = result.data;
+    const { nombre, username, password, email, direccion, rol, telefono } = result.data;
 
-    // 2. Verificar unicidad antes de crear
+    // Hashear la contraseña antes de guardarla
+    const hashedPassword = await bcrypt.hash(password, 10); // Salt rounds = 10
+
     const existeUsuario = await prisma.usuario.findFirst({
-      where: {
-        OR: [{ username }, { email }],
-      },
+      where: { OR: [{ username }, { email }] },
     });
 
     if (existeUsuario) {
       return res.status(409).json({
         error: "El usuario ya existe",
-        campoConflictivo:
-          existeUsuario.username === username ? "username" : "email",
+        campoConflictivo: existeUsuario.username === username ? "username" : "email",
       });
     }
 
-    // 3. Crear el usuario
     const usuario = await prisma.usuario.create({
       data: {
         nombre,
         username,
-        password,
+        password: hashedPassword, // Usar la contraseña hasheada
         email,
         direccion,
         rol,
         telefono: telefono || null,
+        Carrito: {
+          create: {} // Crear carrito vacío automáticamente
+        }
       },
+      include: {
+        Carrito: true
+      }
     });
 
-    // 4. Responder con formato consistente
     return res.status(201).json({
       ...usuario,
       id: usuario.id.toString(),
     });
+    
   } catch (error: any) {
     console.error("Error en createUsuario:", error);
 
-    // Manejo específico de errores de Prisma
     if (error.code === "P2002") {
       return res.status(409).json({
         error: "Conflicto de datos",
@@ -109,7 +112,6 @@ export const createUsuario = async (
       });
     }
 
-    // Error general del servidor
     return res.status(500).json({
       error: "Error interno del servidor",
       detalles: process.env.NODE_ENV === "development" ? error.message : null,

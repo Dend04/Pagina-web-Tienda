@@ -10,8 +10,9 @@ datasource db {
 model Usuario {
   id             BigInt         @id @default(autoincrement())
   nombre         String
+  fotoPerfil     String?
   username       String         @unique
-  password       String 
+  password       String
   email          String         @unique
   direccion      String
   rol            String
@@ -21,14 +22,15 @@ model Usuario {
   favoritos      Favorito[]
   Producto       Producto?      @relation(fields: [productoId], references: [id])
   productoId     BigInt?
+  Carrito        Carrito?
 }
 
 model Producto {
-  id                     BigInt          @id @default(autoincrement())
+  id                     BigInt         @id @default(autoincrement())
   nombre                 String
   descripcion            String?
-  precio                 Decimal         @db.Decimal(10, 2)
-  costo                  Decimal         @db.Decimal(10, 2)
+  precio                 Decimal        @db.Decimal(10, 2)
+  costo                  Decimal        @db.Decimal(10, 2)
   foto_url               String?
   uso                    String?
   veces_comprado         BigInt?
@@ -37,14 +39,17 @@ model Producto {
   notificaciones         Notificacion[]
   favoritos              Favorito[]
   usuario                Usuario[]
+  Carrito                Carrito?       @relation(fields: [carritoId], references: [id])
+  carritoId              BigInt?
+  CarritoItem            CarritoItem[]
 }
 
 model Pedido {
-  id           BigInt          @id @default(autoincrement())
-  usuario_id   BigInt
-  usuario      Usuario         @relation(fields: [usuario_id], references: [id])
-  fecha_pedido DateTime        @default(now()) @db.Timestamptz(6)
-  estado       String
+  id              BigInt   @id @default(autoincrement())
+  usuario_id      BigInt
+  usuario         Usuario  @relation(fields: [usuario_id], references: [id])
+  fecha_pedido    DateTime @default(now()) @db.Timestamptz(6)
+  estado          String
   producto_id     BigInt
   producto        Producto @relation(fields: [producto_id], references: [id])
   cantidad        Int
@@ -61,6 +66,7 @@ model Notificacion {
   mensaje     String?
   fecha_envio DateTime         @default(now()) @db.Timestamptz(6)
 }
+
 model Favorito {
   id          BigInt   @id @default(autoincrement())
   usuario_id  BigInt
@@ -70,6 +76,29 @@ model Favorito {
   creado_en   DateTime @default(now()) @db.Timestamptz(6)
 
   @@unique([usuario_id, producto_id])
+}
+
+model Carrito {
+  id            BigInt        @id @default(autoincrement())
+  usuario       Usuario       @relation(fields: [usuarioId], references: [id])
+  usuarioId     BigInt        @unique
+  items         CarritoItem[] // Tabla intermedia
+  creadoEn      DateTime      @default(now()) @db.Timestamptz(6)
+  actualizadoEn DateTime      @default(now()) @db.Timestamptz(6)
+  Producto      Producto[]
+}
+
+model CarritoItem {
+  id             BigInt   @id @default(autoincrement())
+  carrito        Carrito  @relation(fields: [carritoId], references: [id])
+  carritoId      BigInt
+  producto       Producto @relation(fields: [productoId], references: [id])
+  productoId     BigInt
+  cantidad       Int      @default(1)
+  precioUnitario Decimal  @db.Decimal(10, 2) // Precio al momento de agregar
+  creadoEn       DateTime @default(now()) @db.Timestamptz(6)
+
+  @@unique([carritoId, productoId]) // Evita duplicados
 }
 
 enum NotificacionTipo {
