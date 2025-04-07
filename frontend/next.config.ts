@@ -1,7 +1,13 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  /* config options here */
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  images: {
+    domains: ['images.unsplash.com'],
+    formats: ['image/webp'],
+    minimumCacheTTL: 86400,
+  },
 };
+
 
 export default nextConfig;
