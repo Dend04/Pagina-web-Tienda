@@ -4,4 +4,9 @@ export interface Product {
   price: number;
   category: string;
   image: string;
+  description?: string;       
+  rating?: number;            
+  stock?: number;             
+  minQuantity?: number;       
+  maxQuantity?: number;       
 }

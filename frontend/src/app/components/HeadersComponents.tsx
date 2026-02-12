@@ -1,7 +1,7 @@
 "use client";
 
 import { ComponentType, SVGProps } from "react";
-import { HomeIcon, ChartBarIcon, CubeIcon, ShoppingCartIcon, UserCircleIcon } from "@heroicons/react/24/outline";
+import { ChartBarIcon, CubeIcon, ShoppingCartIcon, UserCircleIcon } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -37,8 +37,8 @@ export const HeaderMenu: React.FC<HeaderMenuProps> = ({ navigationItems }) => {
             href={item.path}
             className={`group relative flex items-center p-2 rounded-lg transition-all duration-200 ${
               isActive
-                ? "bg-pucara-red/10 text-pucara-red"
-                : "text-gray-600 hover:bg-pucara-red/5 hover:text-pucara-red"
+                ? "bg-pucara-primary/10 text-pucara-primary"
+                : "text-gray-600 hover:bg-pucara-primary/5 hover:text-pucara-primary"
             }`}
           >
             <Icon className="h-6 w-6" />
@@ -73,7 +73,7 @@ export const AppLogo: React.FC = () => {
         />
       </div>
       <span className="text-xl font-bold text-pucara-black">
-        Pucara<span className="text-pucara-red">.</span>
+        Pucara<span className="text-pucara-primary">.</span>
       </span>
     </Link>
   );
@@ -105,10 +105,10 @@ export function MainHeader() {
           <div className="flex items-center space-x-4">
             <Link
               href="/carrito"
-              className="group relative p-2 text-gray-600 hover:text-pucara-red transition-colors"
+              className="group relative p-2 text-gray-600 hover:text-pucara-primary transition-colors"
             >
               <ShoppingCartIcon className="w-6 h-6" />
-              <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-white bg-pucara-red rounded-full min-w-[1.25rem] h-5">
+              <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-pucara-white bg-pucara-primary rounded-full min-w-[1.25rem] h-5">
                 3
               </span>
               <span className="sr-only">Carrito de compras</span>
@@ -118,8 +118,8 @@ export function MainHeader() {
               href="/"
               className="group flex items-center gap-2 hover:opacity-85 transition-opacity"
             >
-              <div className="h-8 w-8 flex items-center justify-center rounded-full bg-pucara-red/10">
-                <UserCircleIcon className="h-5 w-5 text-pucara-red" />
+              <div className="h-8 w-8 flex items-center justify-center rounded-full bg-pucara-primary/10">
+                <UserCircleIcon className="h-5 w-5 text-pucara-primary" />
               </div>
               <span className="text-gray-700 text-sm font-medium hidden md:inline">
                 Iniciar sesión

@@ -11,11 +11,12 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  /* 🎨 Colores personalizados Pucara */
-  --color-pucara-red: #A63C3C;
-  --color-pucara-darkred: #8B2C2C;
-  --color-pucara-beige: #F5F1E8;
-  --color-pucara-black: #1A1A1A;
+  /* 🎨 COLORES CORPORATIVOS PUCARA SA - OFICIALES */
+  --color-pucara-primary: #F2822E; /* RGB: 242, 130, 46 - Naranja principal */
+  --color-pucara-blue: #0A79C8;    /* RGB: 10, 121, 200 - Azul dominante */
+  --color-pucara-accent: #C11406;  /* RGB: 193, 20, 6 - Rojo secundario */
+  --color-pucara-white: #FFFFFF;   /* Blanco puro */
+  --color-pucara-black: #000000;   /* Negro puro */
 }
 
 @media (prefers-color-scheme: dark) {
@@ -31,6 +32,7 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Tus utilidades personalizadas */
 .perspective-1000 {
   perspective: 1000px;
 }

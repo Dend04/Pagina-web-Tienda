@@ -66,12 +66,12 @@ const offerProducts: Product[] = [
     image:
       "https://images.unsplash.com/photo-1599669454699-248893623440?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
   },
-  // ... más productos
+  // Puedes agregar más productos aquí
 ];
 
 export default function Dashboard() {
   return (
-    <div className="min-h-screen bg-pucara-beige flex flex-col">
+    <div className="min-h-screen bg-pucara-white flex flex-col">
       <MainHeader />
 
       <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -102,14 +102,14 @@ export default function Dashboard() {
 
         {/* Banner promocional */}
         <section className="mt-16">
-          <div className="bg-gradient-to-br from-pucara-red/10 to-pucara-beige rounded-3xl p-10 text-center border border-pucara-red/20 shadow-inner">
+          <div className="bg-gradient-to-br from-pucara-primary/10 to-pucara-white rounded-3xl p-10 text-center border border-pucara-primary/20 shadow-inner">
             <h2 className="text-3xl md:text-4xl font-bold text-pucara-black mb-4">
               Envío Gratis en Pedidos Mayores a $100
             </h2>
             <p className="text-gray-700 text-lg mb-8">
               Garantía de devolución de 30 días • Soporte 24/7
             </p>
-            <button className="bg-pucara-red text-white px-10 py-4 rounded-full hover:bg-pucara-darkred transition-all duration-300 text-base font-semibold shadow-md hover:shadow-xl transform hover:scale-105">
+            <button className="bg-pucara-primary text-pucara-white px-10 py-4 rounded-full hover:bg-pucara-accent transition-all duration-300 text-base font-semibold shadow-md hover:shadow-xl transform hover:scale-105">
               Ver condiciones
             </button>
           </div>
