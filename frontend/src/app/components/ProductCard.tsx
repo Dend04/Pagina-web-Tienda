@@ -6,8 +6,6 @@ import Link from "next/link";
 import { ShoppingCartIcon, ChatBubbleOvalLeftEllipsisIcon } from "@heroicons/react/24/outline";
 import { Product } from "@/app/types/product";
 
-// Número de WhatsApp de Pucara (cambiar por el tuyo)
-const WHATSAPP_NUMBER = "5355220294";
 
 interface ProductCardProps {
   product: Product;
@@ -29,22 +27,6 @@ export const ProductCard = ({ product }: ProductCardProps) => {
       x: ((y - centerY) / centerY) * 15,
       y: ((centerX - x) / centerX) * 15,
     });
-  };
-
-  const handleWhatsAppClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const message = `
-¡Hola! Me interesa este producto de *Pucara*:
-
-🛍️ *${product.name}*
-💰 Precio: $${product.price}
-🏷️ Categoría: ${product.category}
-
-¿Está disponible? Gracias.
-    `.trim();
-    const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-    window.open(waUrl, "_blank");
   };
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -107,14 +89,6 @@ export const ProductCard = ({ product }: ProductCardProps) => {
             </span>
 
             <div className="flex gap-2" onClick={(e) => e.preventDefault()}>
-              <button
-                onClick={handleWhatsAppClick}
-                className="inline-flex items-center gap-1.5 bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700 transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
-                aria-label="Comprar por WhatsApp"
-              >
-                <ChatBubbleOvalLeftEllipsisIcon className="w-4 h-4" />
-                <span className="hidden sm:inline">WhatsApp</span>
-              </button>
 
               <button
                 onClick={handleAddToCart}

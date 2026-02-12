@@ -100,8 +100,6 @@ const products: Product[] = [
   },
 ];
 
-const WHATSAPP_NUMBER = "51999888777";
-
 export default function ProductDetailPage() {
   const params = useParams();
   const id = parseInt(params.id as string);
@@ -111,23 +109,6 @@ export default function ProductDetailPage() {
   if (!product) {
     notFound();
   }
-
-  const handleWhatsApp = () => {
-    const message = `
-¡Hola! Quiero comprar este producto de *Pucara*:
-
-🛍️ *${product.name}*
-💰 Precio unitario: $${product.price}
-🔢 Cantidad: ${quantity}
-💵 Total: $${(product.price * quantity).toFixed(2)}
-🏷️ Categoría: ${product.category}
-
-🔗 Ver producto: ${window.location.href}
-
-¿Pueden confirmar disponibilidad? Gracias.
-    `.trim();
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, "_blank");
-  };
 
   const handleAddToCart = () => {
     console.log(`Agregado al carrito: ${quantity} x ${product.name}`);
@@ -237,13 +218,6 @@ export default function ProductDetailPage() {
               >
                 <ShoppingCartIcon className="w-5 h-5" />
                 Agregar al carrito
-              </button>
-              <button
-                onClick={handleWhatsApp}
-                className="flex-1 inline-flex items-center justify-center gap-3 bg-green-600 text-white py-4 px-6 rounded-xl hover:bg-green-700 transition-all duration-300 font-semibold shadow-md hover:shadow-xl transform hover:-translate-y-0.5"
-              >
-                <ChatBubbleOvalLeftEllipsisIcon className="w-5 h-5" />
-                Comprar por WhatsApp
               </button>
             </div>
 
