@@ -246,7 +246,8 @@ export const getProductoById = async (
       foto_url: producto.foto_url,
       uso: producto.uso,
       veces_comprado: producto.veces_comprado,
-      veces_comprado_usuario: producto.veces_comprado_usuario
+      veces_comprado_usuario: producto.veces_comprado_usuario,
+      carritoId: producto.carritoId
     };
 
     return res.json(response);

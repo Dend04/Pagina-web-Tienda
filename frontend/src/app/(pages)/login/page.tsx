@@ -1,5 +1,4 @@
 "use client";
-import { MainHeader } from "@/app/components/HeadersComponents";
 import Link from "next/link";
 
 export default function LoginPage() {
