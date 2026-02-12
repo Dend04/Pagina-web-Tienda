@@ -115,7 +115,7 @@ export function MainHeader() {
             </Link>
 
             <Link
-              href="/login"
+              href="/"
               className="group flex items-center gap-2 hover:opacity-85 transition-opacity"
             >
               <div className="h-8 w-8 flex items-center justify-center rounded-full bg-pucara-red/10">

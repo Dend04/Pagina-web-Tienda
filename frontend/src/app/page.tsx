@@ -1,281 +1,152 @@
 "use client";
 
-import { motion } from "framer-motion";
-import Image from "next/image";
+import { useState } from "react";
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import { MainHeader } from "@/app/components/HeadersComponents"; // Ajusta la ruta si es necesario
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
-export default function LandingPage() {
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [skipWelcome, setSkipWelcome] = useState(false);
+export default function LoginPage() {
+  const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
 
-  // Redirigir si el usuario ya marcó "no mostrar"
-  useEffect(() => {
-    const savedPreference = localStorage.getItem("skipWelcome");
-    if (savedPreference === "true") {
-      window.location.href = "/dashboard";
-    }
-  }, []);
-
-  const handleSkipChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const shouldSkip = e.target.checked;
-    setSkipWelcome(shouldSkip);
-    localStorage.setItem("skipWelcome", shouldSkip.toString());
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    // Aquí irá tu lógica de autenticación
+    router.push("/dashboard");
   };
 
-  // Optimización de imágenes Unsplash (webp, tamaño dinámico)
-  const optimizeImage = (url: string, width: number) =>
-    `${url}?auto=format&fit=crop&w=${width}&q=80&fm=webp`;
-
-  const products = [
-    {
-      id: 1,
-      name: "Electrónicos",
-      image: optimizeImage(
-        "https://images.unsplash.com/photo-1550009158-9ebf69173e03",
-        800
-      ),
-    },
-    {
-      id: 2,
-      name: "Moda",
-      image: optimizeImage(
-        "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f",
-        800
-      ),
-    },
-    {
-      id: 3,
-      name: "Hogar",
-      image: optimizeImage(
-        "https://images.unsplash.com/photo-1556911220-bff31c812dba",
-        800
-      ),
-    },
-  ];
-
-  const features = [
-    {
-      title: "Compra Segura",
-      icon: "🔒",
-      description:
-        "Protegemos todas tus transacciones con encriptación de última generación",
-    },
-    {
-      title: "Variedad",
-      icon: "🛍️",
-      description:
-        "Descubre miles de productos en diferentes categorías",
-    },
-    {
-      title: "Envíos Rápidos",
-      icon: "🚚",
-      description:
-        "Recibe tus productos en tiempo récord con nuestro servicio premium",
-    },
-  ];
-
   return (
-    <div className="min-h-screen bg-pucara-beige">
-      {/* Header con logo Pucara */}
-      <MainHeader />
-
-      <main className="space-y-24 pb-20">
-        {/* ---------- HERO ---------- */}
-        <section className="pt-16 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto text-center">
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-4xl sm:text-5xl md:text-6xl font-bold text-pucara-black mb-6 leading-tight"
-            >
-              La plataforma más segura para{" "}
-              <span className="text-pucara-red">comprar y vender</span>
-            </motion.h1>
-
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-xl text-gray-600 mb-10 max-w-3xl mx-auto"
-            >
-              Descubre una experiencia de compra única, respaldada por la calidad y tradición de Pucara.
-            </motion.p>
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="relative rounded-2xl overflow-hidden shadow-2xl"
-            >
-              <Image
-                src={optimizeImage(
-                  "https://images.unsplash.com/photo-1526948128573-703ee1aeb6fe",
-                  1600
-                )}
-                alt="Plataforma segura Pucara"
-                width={1600}
-                height={900}
-                className="w-full h-auto object-cover"
-                priority
-              />
-              <div className="absolute inset-0 bg-gradient-to-tr from-pucara-red/20 via-transparent to-transparent" />
-            </motion.div>
-          </div>
-        </section>
-
-        {/* ---------- CARACTERÍSTICAS ---------- */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.15, duration: 0.5 }}
-                className="group p-8 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
-              >
-                <div className="text-4xl mb-4">{feature.icon}</div>
-                <h3 className="text-xl font-semibold text-pucara-black mb-2">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-600 leading-relaxed">
-                  {feature.description}
-                </p>
-                <div className="mt-4 w-12 h-0.5 bg-pucara-red/30 group-hover:w-20 transition-all duration-300" />
-              </motion.div>
-            ))}
-          </div>
-        </section>
-
-        {/* ---------- GALERÍA DE PRODUCTOS ---------- */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-pucara-black mb-4">
-              Productos Destacados
-            </h2>
-            <div className="w-24 h-1 bg-pucara-red mx-auto rounded-full" />
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {products.map((product, index) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="group relative overflow-hidden rounded-2xl bg-white shadow-md hover:shadow-xl transition-all duration-500"
-              >
-                <div className="relative h-72 w-full overflow-hidden">
-                  <Image
-                    src={product.image}
-                    alt={product.name}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    className="object-cover transform transition duration-700 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-pucara-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 p-6 translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
-                  <span className="inline-block px-4 py-2 bg-white/90 backdrop-blur-sm text-pucara-red font-semibold rounded-full shadow-lg">
-                    {product.name}
-                  </span>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </section>
-
-        {/* ---------- CTA Y TÉRMINOS ---------- */}
-        <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="bg-white rounded-3xl p-10 shadow-xl border border-gray-100 text-center"
-          >
-            <h3 className="text-2xl md:text-3xl font-bold text-pucara-black mb-6">
-              ¿Listo para empezar?
-            </h3>
-            <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-              Únete a miles de compradores y vendedores que confían en Pucara.
-            </p>
-
-            <div className="space-y-6">
-              {/* Checkbox de términos */}
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                <label className="flex items-center gap-2 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    id="terms"
-                    required
-                    checked={acceptedTerms}
-                    onChange={(e) => setAcceptedTerms(e.target.checked)}
-                    className="w-5 h-5 rounded border-gray-300 text-pucara-red focus:ring-pucara-red focus:ring-2 transition"
-                  />
-                  <span className="text-sm text-gray-700 group-hover:text-pucara-red transition-colors">
-                    Acepto los{" "}
-                    <Link
-                      href="/terminos"
-                      className="font-medium text-pucara-red hover:underline underline-offset-2"
-                    >
-                      Términos y Condiciones
-                    </Link>
-                  </span>
-                </label>
-
-                <label className="flex items-center gap-2 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    id="skipWelcome"
-                    checked={skipWelcome}
-                    onChange={handleSkipChange}
-                    className="w-5 h-5 rounded border-gray-300 text-pucara-red focus:ring-pucara-red focus:ring-2 transition"
-                  />
-                  <span className="text-sm text-gray-700 group-hover:text-pucara-red transition-colors">
-                    No mostrar esta página nuevamente
-                  </span>
-                </label>
+    <div className="min-h-screen bg-pucara-beige flex flex-col">
+      <main className="flex-1 flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+        <div className="w-full max-w-md">
+          <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 md:p-10">
+            {/* Logo y título */}
+            <div className="text-center mb-8">
+              <div className="relative w-16 h-16 mx-auto mb-4">
+                <Image
+                  src="/descarga (1).jpg"
+                  alt="Pucara Logo"
+                  fill
+                  sizes="64px"
+                  className="object-contain"
+                  priority
+                />
               </div>
-
-              {/* Botones */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-                <Link
-                  href="/login"
-                  className="px-8 py-3.5 bg-pucara-red text-white rounded-full hover:bg-pucara-darkred transition-all duration-300 font-semibold shadow-md hover:shadow-xl transform hover:-translate-y-1"
-                >
-                  Iniciar Sesión
-                </Link>
-                <Link
-                  href="/dashboard"
-                  className="px-8 py-3.5 border-2 border-pucara-red text-pucara-red rounded-full hover:bg-pucara-red/10 transition-all duration-300 font-semibold shadow-sm hover:shadow-md transform hover:-translate-y-1"
-                >
-                  Ver Productos
-                </Link>
-              </div>
-            </div>
-
-            {/* Línea decorativa */}
-            <div className="mt-10 pt-6 border-t border-gray-100">
-              <p className="text-xs text-gray-400">
-                Al continuar, aceptas nuestras políticas de privacidad y uso.
+              <h1 className="text-2xl md:text-3xl font-bold text-pucara-black">
+                Bienvenido a <span className="text-pucara-red">Pucara</span>
+              </h1>
+              <p className="mt-2 text-gray-600">
+                Ingresa a tu cuenta para continuar
               </p>
             </div>
-          </motion.div>
-        </section>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Usuario o correo electrónico */}
+              <div>
+                <label
+                  htmlFor="username"
+                  className="block text-sm font-medium text-pucara-black/80 mb-1.5"
+                >
+                </label>
+                <input
+                  id="username"
+                  name="username"
+                  type="text"
+                  autoComplete="username"
+                  required
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-pucara-red/50 focus:border-pucara-red transition-all duration-200 outline-none"
+                  placeholder="Usuario o correo electrónico"
+                />
+              </div>
+
+              {/* Contraseña con botón de mostrar/ocultar */}
+              <div>
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-pucara-black/80 mb-1.5"
+                >
+                </label>
+                <div className="relative">
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    required
+                    className="w-full px-4 py-3 pr-12 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-pucara-red/50 focus:border-pucara-red transition-all duration-200 outline-none"
+                    placeholder="Contraseña"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-pucara-red transition-colors"
+                  >
+                    {showPassword ? (
+                      <EyeSlashIcon className="w-5 h-5" />
+                    ) : (
+                      <EyeIcon className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Opciones: recordar sesión y olvidé contraseña */}
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 cursor-pointer group">
+                  <input
+                    id="remember-me"
+                    name="remember-me"
+                    type="checkbox"
+                    className="w-5 h-5 rounded border-gray-300 text-pucara-red focus:ring-pucara-red focus:ring-2 transition"
+                  />
+                  <span className="text-sm text-gray-700 group-hover:text-pucara-red transition-colors">
+                    Recordar sesión
+                  </span>
+                </label>
+                <Link
+                  href="/recuperar-contrasena"
+                  className="text-sm font-medium text-pucara-red hover:text-pucara-darkred hover:underline underline-offset-2 transition"
+                >
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
+
+              {/* Botón de inicio de sesión */}
+              <button
+                type="submit"
+                className="w-full bg-pucara-red text-white py-3.5 px-4 rounded-xl hover:bg-pucara-darkred transition-all duration-300 font-semibold shadow-md hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                Iniciar sesión
+              </button>
+
+              {/* Enlace a registro */}
+              <div className="text-center text-sm text-gray-600 pt-2">
+                ¿No tienes cuenta?{" "}
+                <Link
+                  href="/registro"
+                  className="font-semibold text-pucara-red hover:text-pucara-darkred hover:underline underline-offset-2 transition"
+                >
+                  Crear cuenta
+                </Link>
+              </div>
+            </form>
+
+            {/* Términos y condiciones */}
+            <div className="mt-8 pt-6 border-t border-gray-100">
+              <p className="text-xs text-center text-gray-400">
+                Al iniciar sesión aceptas nuestros{" "}
+                <Link href="/terminos" className="text-pucara-red hover:underline">
+                  Términos y Condiciones
+                </Link>
+              </p>
+            </div>
+          </div>
+        </div>
       </main>
 
-      {/* Footer minimalista (opcional, puedes moverlo a un componente aparte) */}
-      <footer className="bg-white border-t border-gray-200 mt-20">
+      {/* Footer */}
+      <footer className="bg-white border-t border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center text-sm text-gray-600">
             <div className="flex items-center mb-4 md:mb-0">
