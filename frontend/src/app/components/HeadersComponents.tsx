@@ -58,7 +58,7 @@ export const HeaderMenu: React.FC<HeaderMenuProps> = ({ navigationItems }) => {
 export const AppLogo: React.FC = () => {
   return (
     <Link
-      href="/"
+      href="/dashboard"
       className="flex items-center hover:opacity-85 transition-opacity"
       aria-label="Ir a la página principal"
     >
