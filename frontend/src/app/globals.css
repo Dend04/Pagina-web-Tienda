@@ -5,11 +5,17 @@
   --foreground: #171717;
 }
 
-@theme inline {
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* 🎨 Colores personalizados Pucara */
+  --color-pucara-red: #A63C3C;
+  --color-pucara-darkred: #8B2C2C;
+  --color-pucara-beige: #F5F1E8;
+  --color-pucara-black: #1A1A1A;
 }
 
 @media (prefers-color-scheme: dark) {

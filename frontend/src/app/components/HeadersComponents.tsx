@@ -83,7 +83,6 @@ export const AppLogo: React.FC = () => {
 // Items de navegación (ajusta rutas según tu proyecto)
 // ------------------------------------------------------------
 export const headerNavigationItems: NavigationItem[] = [
-  { name: "Inicio", icon: HomeIcon, path: "/" },
   { name: "Estadísticas", icon: ChartBarIcon, path: "/estadisticas" },
   { name: "Productos", icon: CubeIcon, path: "/productos" },
 ];
