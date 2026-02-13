@@ -9,7 +9,7 @@ interface WhatsAppButtonProps {
 }
 
 // Número de WhatsApp de Pucara (cambia por el tuyo)
-const WHATSAPP_NUMBER = "51999888777";
+const WHATSAPP_NUMBER = "5355220294";
 
 export const WhatsAppButton = ({ items, total, className = "" }: WhatsAppButtonProps) => {
   const handleClick = () => {
