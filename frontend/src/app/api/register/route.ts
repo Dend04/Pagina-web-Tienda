@@ -2,13 +2,11 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import bcrypt from 'bcryptjs'
 
-// Cliente normal (con anon key) para consultas públicas
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-// Cliente administrador (con service_role) para operaciones privilegiadas
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -16,9 +14,8 @@ const supabaseAdmin = createClient(
 
 export async function POST(request: Request) {
   try {
-    const { username, email, password, telefono, direccion } = await request.json()
+    const { username, email, password, telefono, direccion, rol } = await request.json()
 
-    // Validaciones básicas
     if (!username || !email || !password) {
       return NextResponse.json(
         { success: false, error: 'Faltan campos obligatorios' },
@@ -26,7 +23,7 @@ export async function POST(request: Request) {
       )
     }
 
-    // Verificar si el usuario ya existe (usando cliente normal, no necesita privilegios)
+    // Verificar si el usuario ya existe
     const { data: existingUser, error: checkError } = await supabase
       .from('usuarios')
       .select('id')
@@ -47,10 +44,9 @@ export async function POST(request: Request) {
       )
     }
 
-    // Hashear contraseña
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    // Insertar nuevo usuario usando el cliente ADMIN (omite RLS)
+    // Insertar nuevo usuario con el rol seleccionado
     const { data: newUser, error: insertError } = await supabaseAdmin
       .from('usuarios')
       .insert([
@@ -58,12 +54,12 @@ export async function POST(request: Request) {
           nombre_usuario: username,
           correo: email,
           contrasena: hashedPassword,
-          rol: 'cliente',
+          rol: rol || 'cliente', // ← aquí se usa el rol recibido
           telefono: telefono || null,
           direccion: direccion || null,
         },
       ])
-      .select('id, nombre_usuario, correo')
+      .select('id, nombre_usuario, correo, rol')
       .single()
 
     if (insertError) {

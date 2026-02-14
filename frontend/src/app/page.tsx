@@ -9,33 +9,35 @@ import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 export default function LoginPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError("");
+
     const formData = new FormData(e.currentTarget);
-    const username = formData.get("username") as string;
-    const password = formData.get("password") as string;
+    const nombre_usuario = formData.get("nombre_usuario") as string;
+    const contrasena = formData.get("contrasena") as string;
 
     try {
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ nombre_usuario, contrasena }),
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success) {
-          router.push("/dashboard");
-          return;
-        }
-      }
-    } catch (error) {
-      console.error("Error de conexión:", error);
-    }
+      const data = await res.json();
 
-    // Para pruebas: si falla, igual redirigir
-    router.push("/dashboard");
+      if (res.ok && data.success) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        router.push("/dashboard");
+      } else {
+        setError(data.error || "Credenciales inválidas");
+      }
+    } catch (err) {
+      setError("Error de conexión");
+    }
   };
 
   return (
@@ -44,7 +46,6 @@ export default function LoginPage() {
         <div className="flex flex-col lg:flex-row">
           {/* Columna izquierda - Branding (solo en pantallas grandes) */}
           <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-pucara-primary/5 to-pucara-blue/5 p-12 flex-col justify-center">
-            {/* Fila: logo + texto */}
             <div className="flex items-center gap-4 mb-4">
               <div className="relative w-20 h-20 flex-shrink-0">
                 <Image
@@ -55,26 +56,22 @@ export default function LoginPage() {
                   priority
                 />
               </div>
-              <h1 className="text-4x1 md:text-4xl font-extrabold">
+              <h1 className="text-4xl md:text-4xl font-extrabold">
                 <span className="bg-gradient-to-r from-pucara-primary to-pucara-blue bg-clip-text text-transparent">
                   IPSA Pucara SA
                 </span>
               </h1>
             </div>
-
-            {/* Eslogan */}
             <p className="text-xl text-gray-600 mb-4">
               Nuestra tienda online para compra de productos
             </p>
-
-            {/* Línea decorativa con gradiente */}
             <div className="w-full max-w-md h-1 bg-gradient-to-r from-pucara-primary to-pucara-blue rounded-full"></div>
           </div>
 
           {/* Columna derecha - Formulario */}
           <div className="w-full lg:w-1/2 p-6 sm:p-8 md:p-12">
             <div className="max-w-md mx-auto">
-              {/* Versión móvil del branding (solo en pantallas pequeñas) */}
+              {/* Versión móvil del branding */}
               <div className="lg:hidden text-center mb-8">
                 <div className="relative w-20 h-20 mx-auto mb-4">
                   <Image
@@ -87,19 +84,19 @@ export default function LoginPage() {
                 </div>
                 <h2 className="text-3xl font-bold text-pucara-black">
                   <span className="bg-gradient-to-r from-pucara-primary to-pucara-blue bg-clip-text text-transparent">
-                   IPSA Pucara SA
+                    IPSA Pucara SA
                   </span>
                 </h2>
                 <p className="mt-2 text-gray-600">
-                 Nuestra tienda online para compra de productos
+                  Nuestra tienda online para compra de productos
                 </p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <input
-                    id="username"
-                    name="username"
+                    id="nombre_usuario"
+                    name="nombre_usuario"
                     type="text"
                     autoComplete="username"
                     required
@@ -110,8 +107,8 @@ export default function LoginPage() {
 
                 <div className="relative">
                   <input
-                    id="password"
-                    name="password"
+                    id="contrasena"
+                    name="contrasena"
                     type={showPassword ? "text" : "password"}
                     autoComplete="current-password"
                     required
@@ -148,6 +145,10 @@ export default function LoginPage() {
                     ¿Olvidaste tu contraseña?
                   </Link>
                 </div>
+
+                {error && (
+                  <p className="text-red-500 text-sm text-center">{error}</p>
+                )}
 
                 <button
                   type="submit"

@@ -2,14 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Paso0Rol from "@/app/components/registro/Paso0Rol";
 import Paso1Nombre from "@/app/components/registro/Paso1Nombre";
 import Paso2Email from "@/app/components/registro/Paso2Email";
 import Paso3Password from "@/app/components/registro/Paso3Password";
 import Paso4TelefonoDireccion from "@/app/components/registro/Paso4TelefonoDireccion";
 import Paso5Foto from "@/app/components/registro/Paso5Foto";
 
-// Nombres descriptivos de cada paso
+// Nombres descriptivos de cada paso (ahora 6 pasos)
 const stepNames = [
+  "Tipo de cuenta",
   "Nombre de usuario",
   "Correo electrónico",
   "Contraseña",
@@ -22,6 +24,7 @@ export default function RegistroPage() {
   const [paso, setPaso] = useState(1);
   const [registroExitoso, setRegistroExitoso] = useState(false);
   const [formData, setFormData] = useState({
+    rol: null as "cliente" | "comercial" | null,
     username: "",
     email: "",
     password: "",
@@ -35,14 +38,13 @@ export default function RegistroPage() {
   };
 
   const pasoSiguiente = () => {
-    if (paso < 5) setPaso(paso + 1);
+    if (paso < 6) setPaso(paso + 1);
   };
 
   const pasoAnterior = () => {
     if (paso > 1) setPaso(paso - 1);
   };
 
-  // Navegar solo a pasos anteriores (completados)
   const irAPaso = (numPaso: number) => {
     if (numPaso < paso) {
       setPaso(numPaso);
@@ -54,6 +56,7 @@ export default function RegistroPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        rol: formData.rol,
         username: formData.username,
         email: formData.email,
         password: formData.password,
@@ -65,7 +68,6 @@ export default function RegistroPage() {
 
     const data = await response.json();
     if (data.success) {
-      // En lugar de redirigir, mostramos el paso de éxito
       setRegistroExitoso(true);
     } else {
       alert("Error: " + data.error);
@@ -100,13 +102,21 @@ export default function RegistroPage() {
     switch (paso) {
       case 1:
         return (
+          <Paso0Rol
+            valor={formData.rol}
+            onChange={(rol) => actualizarDatos({ rol })}
+            onSiguiente={pasoSiguiente}
+          />
+        );
+      case 2:
+        return (
           <Paso1Nombre
             valor={formData.username}
             onChange={(val) => actualizarDatos({ username: val })}
             onSiguiente={pasoSiguiente}
           />
         );
-      case 2:
+      case 3:
         return (
           <Paso2Email
             valor={formData.email}
@@ -115,7 +125,7 @@ export default function RegistroPage() {
             onSiguiente={pasoSiguiente}
           />
         );
-      case 3:
+      case 4:
         return (
           <Paso3Password
             valor={formData.password}
@@ -124,7 +134,7 @@ export default function RegistroPage() {
             onSiguiente={pasoSiguiente}
           />
         );
-      case 4:
+      case 5:
         return (
           <Paso4TelefonoDireccion
             telefono={formData.telefono}
@@ -134,7 +144,7 @@ export default function RegistroPage() {
             onSiguiente={pasoSiguiente}
           />
         );
-      case 5:
+      case 6:
         return (
           <Paso5Foto
             foto={formData.foto}
@@ -152,14 +162,13 @@ export default function RegistroPage() {
     <div className="min-h-screen bg-pucara-white flex flex-col">
       <main className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
-          {/* Barra de progreso solo si no estamos en éxito */}
           {!registroExitoso && (
             <div className="mb-8">
               <div className="flex items-center justify-between">
-                {[1, 2, 3, 4, 5].map((num) => {
+                {[1, 2, 3, 4, 5, 6].map((num) => {
                   const isActive = num === paso;
                   const isCompleted = num < paso;
-                  const isClickable = num < paso; // Solo pasos anteriores
+                  const isClickable = num < paso;
                   const stepName = stepNames[num - 1];
 
                   return (
@@ -180,28 +189,23 @@ export default function RegistroPage() {
                       >
                         {num}
                       </button>
-                      {/* Etiqueta solo en paso actual */}
                       {isActive && (
                         <span className="text-xs mt-2 text-pucara-primary font-medium text-center">
                           {stepName}
                         </span>
                       )}
-                      {/* Palomita para pasos completados */}
                       {isCompleted && !isActive && (
-                        <span className="text-xs mt-2 text-pucara-primary/60">
-                          ✓
-                        </span>
+                        <span className="text-xs mt-2 text-pucara-primary/60">✓</span>
                       )}
                     </div>
                   );
                 })}
               </div>
-              {/* Línea de progreso */}
               <div className="relative mt-2">
                 <div className="absolute top-0 left-0 h-1 bg-gray-200 w-full rounded"></div>
                 <div
                   className="absolute top-0 left-0 h-1 bg-pucara-primary rounded transition-all duration-300"
-                  style={{ width: `${((paso - 1) / 4) * 100}%` }}
+                  style={{ width: `${((paso - 1) / 5) * 100}%` }}
                 ></div>
               </div>
             </div>
