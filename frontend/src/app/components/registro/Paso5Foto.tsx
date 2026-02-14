@@ -10,7 +10,7 @@ interface Props {
   foto: File | null;
   onChange: (file: File | null) => void;
   onAnterior: () => void;
-  onFinalizar: (imagenUrl?: string) => Promise<void>;
+  onFinalizar: (imagen?: string) => Promise<void>;
 }
 
 export default function Paso5Foto({ foto, onChange, onAnterior, onFinalizar }: Props) {
@@ -70,35 +70,37 @@ export default function Paso5Foto({ foto, onChange, onAnterior, onFinalizar }: P
     }
   };
 
-  const handleFinalizar = async () => {
-    setSubiendo(true);
-    setError("");
+const handleFinalizar = async () => {
+  setSubiendo(true);
+  setError("");
 
-    try {
-      let imagenUrl = "";
-      if (foto) {
-        const formData = new FormData();
-        formData.append("file", foto);
+  try {
+    let imagenUrl = "";
+    if (foto) {
+      const formData = new FormData();
+      formData.append("file", foto);
 
-        const uploadRes = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        });
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
 
-        const uploadData = await uploadRes.json();
-        if (!uploadRes.ok) {
-          throw new Error(uploadData.error || "Error al subir la imagen");
-        }
-        imagenUrl = uploadData.url;
+      const uploadData = await uploadRes.json();
+      if (!uploadRes.ok) {
+        throw new Error(uploadData.error || "Error al subir la imagen");
       }
-
-      await onFinalizar(imagenUrl);
-    } catch (err: any) {
-      setError(err.message || "Error al procesar el registro");
-    } finally {
-      setSubiendo(false);
+      imagenUrl = uploadData.url;
+      console.log("URL de imagen obtenida:", imagenUrl); // 👈 Verificar en consola
     }
-  };
+
+    await onFinalizar(imagenUrl);
+  } catch (err: any) {
+    setError(err.message || "Error al procesar el registro");
+    console.error("Error en handleFinalizar:", err);
+  } finally {
+    setSubiendo(false);
+  }
+};
 
   return (
     <>

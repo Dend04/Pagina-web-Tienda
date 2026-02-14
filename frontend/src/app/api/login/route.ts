@@ -63,7 +63,7 @@ export async function POST(request: Request) {
       rol: user.rol,
       telefono: user.telefono,
       tipo_usuario: user.tipo_usuario,
-      imagen_url: user.imagen_url,
+      imagen: user.imagen,
     }
 
     const token = jwt.sign(tokenData, jwtSecret, { expiresIn: '7d' })

@@ -1,13 +1,18 @@
-import type { NextConfig } from "next";
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['images.unsplash.com'],
-    formats: ['image/webp'],
-    minimumCacheTTL: 86400,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+      },
+      // Si usas imágenes de otros dominios (como Unsplash en tus productos), agrégalos también
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+    ],
   },
 };
 
-
-export default nextConfig;
+module.exports = nextConfig;

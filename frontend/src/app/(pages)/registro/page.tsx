@@ -52,6 +52,7 @@ export default function RegistroPage() {
   };
 
   const handleSubmit = async (imagenUrl?: string) => {
+    console.log("Enviando imagenUrl:", imagenUrl);
     const response = await fetch("/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -62,7 +63,7 @@ export default function RegistroPage() {
         password: formData.password,
         telefono: formData.telefono || null,
         direccion: formData.direccion || null,
-        imagen_url: imagenUrl || null,
+        imagen: imagenUrl || null,
       }),
     });
 

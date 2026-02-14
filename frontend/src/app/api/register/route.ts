@@ -2,11 +2,6 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import bcrypt from 'bcryptjs'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
-
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -14,7 +9,7 @@ const supabaseAdmin = createClient(
 
 export async function POST(request: Request) {
   try {
-    const { username, email, password, telefono, direccion, rol } = await request.json()
+    const { username, email, password, telefono, direccion, rol, imagen } = await request.json()
 
     if (!username || !email || !password) {
       return NextResponse.json(
@@ -46,7 +41,7 @@ export async function POST(request: Request) {
 
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    // Insertar nuevo usuario con el rol seleccionado
+    // Insertar nuevo usuario con el rol seleccionado y la imagen
     const { data: newUser, error: insertError } = await supabaseAdmin
       .from('usuarios')
       .insert([
@@ -54,12 +49,13 @@ export async function POST(request: Request) {
           nombre_usuario: username,
           correo: email,
           contrasena: hashedPassword,
-          rol: rol || 'cliente', // ← aquí se usa el rol recibido
+          rol: rol || 'cliente',
           telefono: telefono || null,
           direccion: direccion || null,
+          imagen: imagen || null,   
         },
       ])
-      .select('id, nombre_usuario, correo, rol')
+      .select('id, nombre_usuario, correo, rol, imagen')  // incluye imagen en la respuesta
       .single()
 
     if (insertError) {
