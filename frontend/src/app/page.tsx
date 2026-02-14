@@ -10,53 +10,104 @@ export default function LoginPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Aquí irá tu lógica de autenticación
+    const formData = new FormData(e.currentTarget);
+    const username = formData.get("username") as string;
+    const password = formData.get("password") as string;
+
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          router.push("/dashboard");
+          return;
+        }
+      }
+    } catch (error) {
+      console.error("Error de conexión:", error);
+    }
+
+    // Para pruebas: si falla, igual redirigir
     router.push("/dashboard");
   };
 
   return (
-    <div className="min-h-screen bg-pucara-white flex flex-col">
-      <main className="flex-1 flex items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
-        <div className="w-full max-w-md">
-          <div className="bg-pucara-white rounded-2xl shadow-xl border border-gray-100 p-8 md:p-10">
-            {/* Logo y título */}
-            <div className="text-center mb-8">
-              <div className="relative w-16 h-16 mx-auto mb-4">
+    <div className="min-h-screen bg-pucara-white flex items-center justify-center p-4">
+      <div className="max-w-6xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden">
+        <div className="flex flex-col lg:flex-row">
+          {/* Columna izquierda - Branding (solo en pantallas grandes) */}
+          <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-pucara-primary/5 to-pucara-blue/5 p-12 flex-col justify-center">
+            {/* Fila: logo + texto */}
+            <div className="flex items-center gap-4 mb-4">
+              <div className="relative w-20 h-20 flex-shrink-0">
                 <Image
                   src="/descarga (1).jpg"
                   alt="Pucara Logo"
                   fill
-                  sizes="64px"
                   className="object-contain"
                   priority
                 />
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold text-pucara-black">
-                Bienvenido a <span className="text-pucara-primary">Pucara</span>
+              <h1 className="text-4x1 md:text-4xl font-extrabold">
+                <span className="bg-gradient-to-r from-pucara-primary to-pucara-blue bg-clip-text text-transparent">
+                  IPSA Pucara SA
+                </span>
               </h1>
-              <p className="mt-2 text-gray-600">
-                Ingresa a tu cuenta para continuar
-              </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Usuario o correo electrónico */}
-              <div>
-                <input
-                  id="username"
-                  name="username"
-                  type="text"
-                  autoComplete="username"
-                  required
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-pucara-primary/50 focus:border-pucara-primary transition-all duration-200 outline-none"
-                  placeholder="Usuario o correo electrónico"
-                />
+            {/* Eslogan */}
+            <p className="text-xl text-gray-600 mb-4">
+              Nuestra tienda online para compra de productos
+            </p>
+
+            {/* Línea decorativa con gradiente */}
+            <div className="w-full max-w-md h-1 bg-gradient-to-r from-pucara-primary to-pucara-blue rounded-full"></div>
+          </div>
+
+          {/* Columna derecha - Formulario */}
+          <div className="w-full lg:w-1/2 p-6 sm:p-8 md:p-12">
+            <div className="max-w-md mx-auto">
+              {/* Versión móvil del branding (solo en pantallas pequeñas) */}
+              <div className="lg:hidden text-center mb-8">
+                <div className="relative w-20 h-20 mx-auto mb-4">
+                  <Image
+                    src="/descarga (1).jpg"
+                    alt="Pucara Logo"
+                    fill
+                    className="object-contain"
+                    priority
+                  />
+                </div>
+                <h2 className="text-3xl font-bold text-pucara-black">
+                  <span className="bg-gradient-to-r from-pucara-primary to-pucara-blue bg-clip-text text-transparent">
+                   IPSA Pucara SA
+                  </span>
+                </h2>
+                <p className="mt-2 text-gray-600">
+                 Nuestra tienda online para compra de productos
+                </p>
               </div>
 
-              {/* Contraseña con botón de mostrar/ocultar */}
-              <div>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <input
+                    id="username"
+                    name="username"
+                    type="text"
+                    autoComplete="username"
+                    required
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-pucara-primary/50 focus:border-pucara-primary transition-all duration-200 outline-none"
+                    placeholder="Usuario o correo electrónico"
+                  />
+                </div>
+
                 <div className="relative">
                   <input
                     id="password"
@@ -79,61 +130,55 @@ export default function LoginPage() {
                     )}
                   </button>
                 </div>
-              </div>
 
-              {/* Opciones: recordar sesión y olvidé contraseña */}
-              <div className="flex items-center justify-between">
-                <label className="flex items-center gap-2 cursor-pointer group">
-                  <input
-                    id="remember-me"
-                    name="remember-me"
-                    type="checkbox"
-                    className="w-5 h-5 rounded border-gray-300 text-pucara-primary focus:ring-pucara-primary focus:ring-2 transition"
-                  />
-                  <span className="text-sm text-gray-700 group-hover:text-pucara-primary transition-colors">
-                    Recordar sesión
-                  </span>
-                </label>
-                <Link
-                  href="/recuperar-contrasena"
-                  className="text-sm font-medium text-pucara-primary hover:text-pucara-accent hover:underline underline-offset-2 transition"
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-2 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      className="w-5 h-5 rounded border-gray-300 text-pucara-primary focus:ring-pucara-primary focus:ring-2 transition"
+                    />
+                    <span className="text-sm text-gray-700 group-hover:text-pucara-primary transition-colors">
+                      Recordar sesión
+                    </span>
+                  </label>
+                  <Link
+                    href="/recuperar-contrasena"
+                    className="text-sm font-medium text-pucara-primary hover:text-pucara-accent hover:underline underline-offset-2 transition"
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </Link>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full bg-pucara-primary text-pucara-white py-3.5 px-4 rounded-xl hover:bg-pucara-accent transition-all duration-300 font-semibold shadow-md hover:shadow-xl transform hover:-translate-y-0.5"
                 >
-                  ¿Olvidaste tu contraseña?
-                </Link>
+                  Iniciar sesión
+                </button>
+
+                <div className="text-center text-sm text-gray-600 pt-2">
+                  ¿No tienes cuenta?{" "}
+                  <Link
+                    href="/registro"
+                    className="font-semibold text-pucara-primary hover:text-pucara-accent hover:underline underline-offset-2 transition"
+                  >
+                    Crear cuenta
+                  </Link>
+                </div>
+              </form>
+
+              <div className="mt-8 pt-6 border-t border-gray-100">
+                <p className="text-xs text-center text-gray-400">
+                  Al iniciar sesión aceptas nuestros{" "}
+                  <Link href="/terminos" className="text-pucara-primary hover:underline">
+                    Términos y Condiciones
+                  </Link>
+                </p>
               </div>
-
-              {/* Botón de inicio de sesión */}
-              <button
-                type="submit"
-                className="w-full bg-pucara-primary text-pucara-white py-3.5 px-4 rounded-xl hover:bg-pucara-accent transition-all duration-300 font-semibold shadow-md hover:shadow-xl transform hover:-translate-y-0.5"
-              >
-                Iniciar sesión
-              </button>
-
-              {/* Enlace a registro */}
-              <div className="text-center text-sm text-gray-600 pt-2">
-                ¿No tienes cuenta?{" "}
-                <Link
-                  href="/registro"
-                  className="font-semibold text-pucara-primary hover:text-pucara-accent hover:underline underline-offset-2 transition"
-                >
-                  Crear cuenta
-                </Link>
-              </div>
-            </form>
-
-            {/* Términos y condiciones */}
-            <div className="mt-8 pt-6 border-t border-gray-100">
-              <p className="text-xs text-center text-gray-400">
-                Al iniciar sesión aceptas nuestros{" "}
-                <Link href="/terminos" className="text-pucara-primary hover:underline">
-                  Términos y Condiciones
-                </Link>
-              </p>
             </div>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
