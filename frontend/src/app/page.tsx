@@ -1,185 +1,122 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import { MainHeader } from "@/app/components/HeadersComponents";
+import { ProductCarousel } from "@/app/components/ProductCarousel";
+import { Footer } from "@/app/components/Footer";
+import { Product } from "@/app/types/product";
 
-export default function LoginPage() {
-  const router = useRouter();
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
+// Datos de ejemplo (después vendrán de una API o base de datos)
+const featuredProducts: Product[] = [
+  {
+    id: 1,
+    name: "Zapatillas Deportivas",
+    price: 89.99,
+    category: "Calzado",
+    image:
+      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    id: 2,
+    name: "Reloj Inteligente",
+    price: 199.99,
+    category: "Tecnología",
+    image:
+      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    id: 3,
+    name: "Audífonos Inalámbricos",
+    price: 149.99,
+    category: "Audio",
+    image:
+      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    id: 4,
+    name: "Mochila Ejecutiva",
+    price: 79.99,
+    category: "Accesorios",
+    image:
+      "https://images.unsplash.com/photo-1622560480654-d96214fdc887?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    id: 5,
+    name: "Laptop Ultradelgada",
+    price: 1299.99,
+    category: "Tecnología",
+    image:
+      "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+  },
+];
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError("");
+const offerProducts: Product[] = [
+  {
+    id: 6,
+    name: "Smart TV 50\"",
+    price: 499.99,
+    category: "Electrónica",
+    image:
+      "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    id: 7,
+    name: "Auriculares Gaming",
+    price: 89.99,
+    category: "Audio",
+    image:
+      "https://images.unsplash.com/photo-1599669454699-248893623440?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
+  },
+  // Puedes agregar más productos aquí
+];
 
-    const formData = new FormData(e.currentTarget);
-    const nombre_usuario = formData.get("nombre_usuario") as string;
-    const contrasena = formData.get("contrasena") as string;
-
-    try {
-      const res = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre_usuario, contrasena }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
-        router.push("/dashboard");
-      } else {
-        setError(data.error || "Credenciales inválidas");
-      }
-    } catch (err) {
-      setError("Error de conexión");
-    }
-  };
-
+export default function Dashboard() {
   return (
-    <div className="min-h-screen bg-pucara-white flex items-center justify-center p-4">
-      <div className="max-w-6xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden">
-        <div className="flex flex-col lg:flex-row">
-          {/* Columna izquierda - Branding (solo en pantallas grandes) */}
-          <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-pucara-primary/5 to-pucara-blue/5 p-12 flex-col justify-center">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="relative w-20 h-20 flex-shrink-0">
-                <Image
-                  src="/descarga (1).jpg"
-                  alt="Pucara Logo"
-                  fill
-                  className="object-contain"
-                  priority
-                />
-              </div>
-              <h1 className="text-4xl md:text-4xl font-extrabold">
-                <span className="bg-gradient-to-r from-pucara-primary to-pucara-blue bg-clip-text text-transparent">
-                  IPSA Pucara SA
-                </span>
-              </h1>
-            </div>
-            <p className="text-xl text-gray-600 mb-4">
-              Nuestra tienda online para compra de productos
+    <div className="min-h-screen bg-pucara-white flex flex-col">
+      <MainHeader />
+
+      <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        {/* Título principal */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold text-pucara-black mb-2">
+              Productos Destacados
+            </h1>
+            <p className="text-gray-600 text-lg">
+              Descubre nuestra colección exclusiva con diseño y tradición
             </p>
-            <div className="w-full max-w-md h-1 bg-gradient-to-r from-pucara-primary to-pucara-blue rounded-full"></div>
           </div>
-
-          {/* Columna derecha - Formulario */}
-          <div className="w-full lg:w-1/2 p-6 sm:p-8 md:p-12">
-            <div className="max-w-md mx-auto">
-              {/* Versión móvil del branding */}
-              <div className="lg:hidden text-center mb-8">
-                <div className="relative w-20 h-20 mx-auto mb-4">
-                  <Image
-                    src="/descarga (1).jpg"
-                    alt="Pucara Logo"
-                    fill
-                    className="object-contain"
-                    priority
-                  />
-                </div>
-                <h2 className="text-3xl font-bold text-pucara-black">
-                  <span className="bg-gradient-to-r from-pucara-primary to-pucara-blue bg-clip-text text-transparent">
-                    IPSA Pucara SA
-                  </span>
-                </h2>
-                <p className="mt-2 text-gray-600">
-                  Nuestra tienda online para compra de productos
-                </p>
-              </div>
-
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <input
-                    id="nombre_usuario"
-                    name="nombre_usuario"
-                    type="text"
-                    autoComplete="username"
-                    required
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-pucara-primary/50 focus:border-pucara-primary transition-all duration-200 outline-none"
-                    placeholder="Usuario o correo electrónico"
-                  />
-                </div>
-
-                <div className="relative">
-                  <input
-                    id="contrasena"
-                    name="contrasena"
-                    type={showPassword ? "text" : "password"}
-                    autoComplete="current-password"
-                    required
-                    className="w-full px-4 py-3 pr-12 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-pucara-primary/50 focus:border-pucara-primary transition-all duration-200 outline-none"
-                    placeholder="Contraseña"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-pucara-primary transition-colors"
-                  >
-                    {showPassword ? (
-                      <EyeSlashIcon className="w-5 h-5" />
-                    ) : (
-                      <EyeIcon className="w-5 h-5" />
-                    )}
-                  </button>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <label className="flex items-center gap-2 cursor-pointer group">
-                    <input
-                      type="checkbox"
-                      className="w-5 h-5 rounded border-gray-300 text-pucara-primary focus:ring-pucara-primary focus:ring-2 transition"
-                    />
-                    <span className="text-sm text-gray-700 group-hover:text-pucara-primary transition-colors">
-                      Recordar sesión
-                    </span>
-                  </label>
-                  <Link
-                    href="/recuperar-contrasena"
-                    className="text-sm font-medium text-pucara-primary hover:text-pucara-accent hover:underline underline-offset-2 transition"
-                  >
-                    ¿Olvidaste tu contraseña?
-                  </Link>
-                </div>
-
-                {error && (
-                  <p className="text-red-500 text-sm text-center">{error}</p>
-                )}
-
-                <button
-                  type="submit"
-                  className="w-full bg-pucara-primary text-pucara-white py-3.5 px-4 rounded-xl hover:bg-pucara-accent transition-all duration-300 font-semibold shadow-md hover:shadow-xl transform hover:-translate-y-0.5"
-                >
-                  Iniciar sesión
-                </button>
-
-                <div className="text-center text-sm text-gray-600 pt-2">
-                  ¿No tienes cuenta?{" "}
-                  <Link
-                    href="/registro"
-                    className="font-semibold text-pucara-primary hover:text-pucara-accent hover:underline underline-offset-2 transition"
-                  >
-                    Crear cuenta
-                  </Link>
-                </div>
-              </form>
-
-              <div className="mt-8 pt-6 border-t border-gray-100">
-                <p className="text-xs text-center text-gray-400">
-                  Al iniciar sesión aceptas nuestros{" "}
-                  <Link href="/terminos" className="text-pucara-primary hover:underline">
-                    Términos y Condiciones
-                  </Link>
-                </p>
-              </div>
-            </div>
-          </div>
+          <span className="mt-3 sm:mt-0 text-sm text-gray-600 bg-white px-5 py-2.5 rounded-full border border-gray-200 shadow-sm">
+            Mostrando {featuredProducts.length + offerProducts.length} de 36 productos
+          </span>
         </div>
-      </div>
+
+        {/* Carrusel de productos destacados */}
+        <section className="mb-16">
+          <ProductCarousel products={featuredProducts} title="Lo más vendido" />
+        </section>
+
+        {/* Carrusel de ofertas */}
+        <section className="mb-16">
+          <ProductCarousel products={offerProducts} title="Ofertas especiales" />
+        </section>
+
+        {/* Banner promocional */}
+        <section className="mt-16">
+          <div className="bg-gradient-to-br from-pucara-primary/10 to-pucara-white rounded-3xl p-10 text-center border border-pucara-primary/20 shadow-inner">
+            <h2 className="text-3xl md:text-4xl font-bold text-pucara-black mb-4">
+              Envío Gratis en Pedidos Mayores a $100
+            </h2>
+            <p className="text-gray-700 text-lg mb-8">
+              Garantía de devolución de 30 días • Soporte 24/7
+            </p>
+            <button className="bg-pucara-primary text-pucara-white px-10 py-4 rounded-full hover:bg-pucara-accent transition-all duration-300 text-base font-semibold shadow-md hover:shadow-xl transform hover:scale-105">
+              Ver condiciones
+            </button>
+          </div>
+        </section>
+      </main>
+
+      <Footer />
     </div>
   );
 }

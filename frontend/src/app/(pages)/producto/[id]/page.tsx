@@ -123,7 +123,7 @@ export default function ProductDetailPage() {
         {/* Botón volver */}
         <div className="mb-6">
           <Link
-            href="/dashboard"
+            href="/"
             className="inline-flex items-center gap-2 text-gray-600 hover:text-pucara-primary transition-colors"
           >
             <ArrowLeftIcon className="w-4 h-4" />

@@ -58,7 +58,7 @@ export const HeaderMenu: React.FC<HeaderMenuProps> = ({ navigationItems }) => {
 export const AppLogo: React.FC = () => {
   return (
     <Link
-      href="/dashboard"
+      href="/"
       className="flex items-center hover:opacity-85 transition-opacity"
       aria-label="Ir a la página principal"
     >
@@ -108,14 +108,14 @@ export function MainHeader() {
               className="group relative p-2 text-gray-600 hover:text-pucara-primary transition-colors"
             >
               <ShoppingCartIcon className="w-6 h-6" />
-              <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-pucara-white bg-pucara-primary rounded-full min-w-[1.25rem] h-5">
+              <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-pucara-white bg-pucara-primary rounded-full min-w-5 h-5">
                 3
               </span>
               <span className="sr-only">Carrito de compras</span>
             </Link>
 
             <Link
-              href="/"
+              href="/login"
               className="group flex items-center gap-2 hover:opacity-85 transition-opacity"
             >
               <div className="h-8 w-8 flex items-center justify-center rounded-full bg-pucara-primary/10">

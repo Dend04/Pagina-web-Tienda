@@ -90,7 +90,7 @@ export default function RegistroPage() {
             Tu cuenta ha sido registrada. Ahora puedes iniciar sesión.
           </p>
           <button
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/login")}
             className="mt-4 bg-pucara-primary text-pucara-white px-8 py-3 rounded-full hover:bg-pucara-accent transition-all shadow-md hover:shadow-lg font-medium"
           >
             Ir a iniciar sesión

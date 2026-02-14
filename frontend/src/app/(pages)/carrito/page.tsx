@@ -62,7 +62,7 @@ export default function CartPage() {
           <div className="text-center py-12 bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
             <p className="text-gray-500 mb-4">Tu carrito está vacío</p>
             <Link
-              href="/dashboard"
+              href="/"
               className="inline-flex items-center gap-2 text-pucara-primary hover:text-pucara-accent font-medium transition-colors"
             >
               Explorar productos →
@@ -142,7 +142,7 @@ export default function CartPage() {
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                   <Link
-                    href="/dashboard"
+                    href="/"
                     className="inline-flex items-center justify-center px-6 py-3 border border-pucara-primary text-pucara-primary rounded-full hover:bg-pucara-primary/10 transition-colors font-medium text-center"
                   >
                     Seguir comprando
