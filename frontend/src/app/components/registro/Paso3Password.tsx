@@ -247,7 +247,7 @@ export default function Paso3Password({ valor, onChange, onAnterior, onSiguiente
                 const cumple = req.test(valor);
                 return (
                   <div key={idx} className="flex items-start gap-3 text-sm">
-                    <span className={`mt-0.5 flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${
+                    <span className={`mt-0.5 shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${
                       cumple ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'
                     }`}>
                       {cumple ? '✓' : '○'}

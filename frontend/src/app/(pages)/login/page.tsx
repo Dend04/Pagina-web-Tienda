@@ -44,7 +44,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-pucara-white flex items-center justify-center p-4">
       <div className="max-w-6xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden">
         <div className="flex flex-col lg:flex-row">
-          {/* Columna izquierda - Branding (solo en pantallas grandes) */}
+          {/* Columna izquierda - Branding */}
           <div className="hidden lg:flex lg:w-1/2 bg-linear-to-br from-pucara-primary/5 to-pucara-blue/5 p-12 flex-col justify-center">
             <div className="flex items-center gap-4 mb-4">
               <div className="relative w-20 h-20 shrink-0">
@@ -71,7 +71,7 @@ export default function LoginPage() {
           {/* Columna derecha - Formulario */}
           <div className="w-full lg:w-1/2 p-6 sm:p-8 md:p-12">
             <div className="max-w-md mx-auto">
-              {/* Versión móvil del branding */}
+              {/* Branding móvil */}
               <div className="lg:hidden text-center mb-8">
                 <div className="relative w-20 h-20 mx-auto mb-4">
                   <Image
@@ -100,7 +100,7 @@ export default function LoginPage() {
                     type="text"
                     autoComplete="username"
                     required
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-pucara-primary/50 focus:border-pucara-primary transition-all duration-200 outline-none"
+                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-pucara-primary/50 focus:border-pucara-primary transition-all duration-200 outline-none text-gray-900 placeholder-gray-400"
                     placeholder="Usuario o correo electrónico"
                   />
                 </div>
@@ -112,7 +112,7 @@ export default function LoginPage() {
                     type={showPassword ? "text" : "password"}
                     autoComplete="current-password"
                     required
-                    className="w-full px-4 py-3 pr-12 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-pucara-primary/50 focus:border-pucara-primary transition-all duration-200 outline-none"
+                    className="w-full px-4 py-3 pr-12 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-pucara-primary/50 focus:border-pucara-primary transition-all duration-200 outline-none text-gray-900 placeholder-gray-400"
                     placeholder="Contraseña"
                   />
                   <button

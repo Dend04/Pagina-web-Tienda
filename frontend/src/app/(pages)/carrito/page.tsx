@@ -79,7 +79,7 @@ export default function CartPage() {
                 >
                   <div className="flex items-center gap-4">
                     {/* Imagen */}
-                    <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl bg-gray-100">
+                    <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-gray-100">
                       <Image
                         src={item.image}
                         alt={item.name}
@@ -123,7 +123,7 @@ export default function CartPage() {
                     </div>
 
                     {/* Subtotal */}
-                    <p className="text-lg font-semibold text-pucara-black min-w-[80px] text-right">
+                    <p className="text-lg font-semibold text-pucara-black min-w-20 text-right">
                       ${(item.price * item.quantity).toFixed(2)}
                     </p>
                   </div>

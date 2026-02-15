@@ -120,7 +120,7 @@ const handleFinalizar = async () => {
 
         {/* Área de la foto */}
         <div className="flex flex-col items-center">
-          <div className="relative w-32 h-32 rounded-full bg-gradient-to-br from-pucara-primary/20 to-pucara-accent/20 overflow-hidden mb-4 ring-4 ring-pucara-primary/10">
+          <div className="relative w-32 h-32 rounded-full bg-linear-to-br from-pucara-primary/20 to-pucara-accent/20 overflow-hidden mb-4 ring-4 ring-pucara-primary/10">
             {preview ? (
               <Image
                 src={preview}

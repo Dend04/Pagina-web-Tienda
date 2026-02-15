@@ -17,7 +17,7 @@ export const ProductCarousel = ({ products, title }: ProductCarouselProps) => {
     align: "start",
     slidesToScroll: 1,
     breakpoints: {
-      "(min-width: 768px)": { slidesToScroll: 2 },
+      "(min-width: 640px)": { slidesToScroll: 2 },
       "(min-width: 1024px)": { slidesToScroll: 3 },
     },
   });
@@ -76,7 +76,7 @@ export const ProductCarousel = ({ products, title }: ProductCarouselProps) => {
           {products.map((product) => (
             <div
               key={product.id}
-              className="flex-[0_0_100%] min-w-0 sm:flex-[0_0_50%] lg:flex-[0_0_33.33%] pl-4 first:pl-0"
+              className="flex-[0_0_50%] min-w-0 sm:flex-[0_0_50%] lg:flex-[0_0_33.33%] pl-4 first:pl-0"
             >
               <ProductCard product={product} />
             </div>

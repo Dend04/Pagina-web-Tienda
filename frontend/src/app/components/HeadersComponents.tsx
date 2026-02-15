@@ -12,9 +12,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
-// ------------------------------------------------------------
-// Interfaces
-// ------------------------------------------------------------
 interface NavigationItem {
   name: string;
   icon: ComponentType<SVGProps<SVGSVGElement>>;
@@ -31,9 +28,6 @@ interface UserData {
   imagen?: string;
 }
 
-// ------------------------------------------------------------
-// Menú de navegación con iconos y estado activo (colores Pucara)
-// ------------------------------------------------------------
 export const HeaderMenu: React.FC<HeaderMenuProps> = ({ navigationItems }) => {
   const pathname = usePathname();
 
@@ -64,9 +58,6 @@ export const HeaderMenu: React.FC<HeaderMenuProps> = ({ navigationItems }) => {
   );
 };
 
-// ------------------------------------------------------------
-// Logo con imagen de Pucara (desde /public)
-// ------------------------------------------------------------
 export const AppLogo: React.FC = () => {
   return (
     <Link
@@ -91,17 +82,12 @@ export const AppLogo: React.FC = () => {
   );
 };
 
-// ------------------------------------------------------------
-// Items de navegación (ajusta rutas según tu proyecto)
-// ------------------------------------------------------------
 export const headerNavigationItems: NavigationItem[] = [
   { name: "Estadísticas", icon: ChartBarIcon, path: "/estadisticas" },
   { name: "Productos", icon: CubeIcon, path: "/productos" },
 ];
 
-// ------------------------------------------------------------
 // Modal de confirmación para cerrar sesión
-// ------------------------------------------------------------
 interface LogoutModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -159,9 +145,6 @@ const LogoutModal: React.FC<LogoutModalProps> = ({ isOpen, onClose, onConfirm, o
   );
 };
 
-// ------------------------------------------------------------
-// Header principal (sticky, con carrito y usuario)
-// ------------------------------------------------------------
 export function MainHeader() {
   const router = useRouter();
   const [user, setUser] = useState<UserData | null>(null);
@@ -209,7 +192,6 @@ export function MainHeader() {
 
             {/* Carrito y usuario */}
             <div className="flex items-center space-x-4">
-              {/* Carrito con tooltip */}
               <Link
                 href="/carrito"
                 className="group relative p-2 text-gray-600 hover:text-pucara-primary transition-colors"
@@ -226,12 +208,10 @@ export function MainHeader() {
 
               {user ? (
                 <>
-                  {/* Nombre de usuario */}
                   <span className="text-sm text-gray-700 hidden md:inline">
                     {user.nombre_usuario || user.correo}
                   </span>
 
-                  {/* Avatar con enlace a perfil y tooltip */}
                   <Link
                     href="/perfil"
                     className="group relative flex items-center"
@@ -255,10 +235,9 @@ export function MainHeader() {
                     <span className="sr-only">Perfil</span>
                   </Link>
 
-                  {/* Botón de cerrar sesión con tooltip */}
                   <button
                     onClick={() => setShowLogoutModal(true)}
-                    className="group relative p-2 text-gray-600 hover:text-red-600 transition-colors"
+                    className="group relative p-1 sm:p-2 text-gray-600 hover:text-red-600 transition-colors"
                     aria-label="Cerrar sesión"
                   >
                     <XMarkIcon className="w-5 h-5" />
@@ -286,7 +265,6 @@ export function MainHeader() {
         </div>
       </header>
 
-      {/* Modal de confirmación de cierre de sesión */}
       <LogoutModal
         isOpen={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}

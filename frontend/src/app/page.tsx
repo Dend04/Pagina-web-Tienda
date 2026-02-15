@@ -102,7 +102,7 @@ export default function Dashboard() {
 
         {/* Banner promocional */}
         <section className="mt-16">
-          <div className="bg-gradient-to-br from-pucara-primary/10 to-pucara-white rounded-3xl p-10 text-center border border-pucara-primary/20 shadow-inner">
+          <div className="bg-linear-to-br from-pucara-primary/10 to-pucara-white rounded-3xl p-10 text-center border border-pucara-primary/20 shadow-inner">
             <h2 className="text-3xl md:text-4xl font-bold text-pucara-black mb-4">
               Envío Gratis en Pedidos Mayores a $100
             </h2>

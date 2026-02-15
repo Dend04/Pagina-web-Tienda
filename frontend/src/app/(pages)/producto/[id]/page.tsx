@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,10 +9,15 @@ import { MainHeader } from "@/app/components/HeadersComponents";
 import { Footer } from "@/app/components/Footer";
 import { RatingStars } from "@/app/components/RatingStars";
 import { QuantitySelector } from "@/app/components/QuantitySelector";
-import { ShoppingCartIcon, ChatBubbleOvalLeftEllipsisIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
+import {
+  ShoppingCartIcon,
+  ArrowLeftIcon,
+  HeartIcon,
+} from "@heroicons/react/24/outline";
+import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
 import { Product } from "@/app/types/product";
 
-// 📦 Datos de ejemplo (después conectarás a Supabase)
+// Datos de ejemplo (después conectarás a Supabase)
 const products: Product[] = [
   {
     id: 1,
@@ -38,66 +43,7 @@ const products: Product[] = [
     minQuantity: 1,
     maxQuantity: 3,
   },
-  {
-    id: 3,
-    name: "Audífonos Inalámbricos",
-    price: 149.99,
-    category: "Audio",
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-    description: "Audífonos con cancelación de ruido activa, sonido de alta fidelidad y 30 horas de autonomía. Incluye estuche de carga inalámbrica.",
-    rating: 4.8,
-    stock: 30,
-    minQuantity: 1,
-    maxQuantity: 10,
-  },
-  {
-    id: 4,
-    name: "Mochila Ejecutiva",
-    price: 79.99,
-    category: "Accesorios",
-    image: "https://images.unsplash.com/photo-1622560480654-d96214fdc887?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-    description: "Mochila ejecutiva con compartimento acolchado para laptop de hasta 17 pulgadas, puerto USB integrado y materiales resistentes al agua.",
-    rating: 4.3,
-    stock: 18,
-    minQuantity: 1,
-    maxQuantity: 4,
-  },
-  {
-    id: 5,
-    name: "Laptop Ultradelgada",
-    price: 1299.99,
-    category: "Tecnología",
-    image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-    description: "Laptop ultraligera con procesador Intel Core i7, 16GB RAM, SSD 512GB y pantalla 4K. Ideal para profesionales creativos.",
-    rating: 4.7,
-    stock: 8,
-    minQuantity: 1,
-    maxQuantity: 2,
-  },
-  {
-    id: 6,
-    name: "Smart TV 50\"",
-    price: 499.99,
-    category: "Electrónica",
-    image: "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-    description: "Smart TV 4K Ultra HD con HDR, asistentes de voz integrados y plataforma inteligente. Diseño sin bordes.",
-    rating: 4.4,
-    stock: 15,
-    minQuantity: 1,
-    maxQuantity: 3,
-  },
-  {
-    id: 7,
-    name: "Auriculares Gaming",
-    price: 89.99,
-    category: "Audio",
-    image: "https://images.unsplash.com/photo-1599669454699-248893623440?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-    description: "Auriculares gaming con sonido envolvente 7.1, micrófono retráctil y diadema acolchada. Compatible con PC, PlayStation y Xbox.",
-    rating: 4.6,
-    stock: 22,
-    minQuantity: 1,
-    maxQuantity: 5,
-  },
+  // ... otros productos
 ];
 
 export default function ProductDetailPage() {
@@ -105,10 +51,59 @@ export default function ProductDetailPage() {
   const id = parseInt(params.id as string);
   const product = products.find((p) => p.id === id);
   const [quantity, setQuantity] = useState(product?.minQuantity || 1);
+  const [isFavorito, setIsFavorito] = useState(false);
+  const [loadingFav, setLoadingFav] = useState(false);
+
+  useEffect(() => {
+    if (!product) return;
+    const checkFavorito = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      try {
+        const res = await fetch("/api/favoritos", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (res.ok && data.favoritos) {
+          setIsFavorito(data.favoritos.includes(product.id));
+        }
+      } catch (error) {
+        console.error("Error al verificar favoritos", error);
+      }
+    };
+    checkFavorito();
+  }, [product]);
 
   if (!product) {
     notFound();
   }
+
+  const toggleFavorito = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      window.location.href = "/login";
+      return;
+    }
+    setLoadingFav(true);
+    try {
+      const res = await fetch("/api/favoritos", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ producto_id: product.id }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setIsFavorito(data.favorito);
+      }
+    } catch (error) {
+      console.error("Error al cambiar favorito", error);
+    } finally {
+      setLoadingFav(false);
+    }
+  };
 
   const handleAddToCart = () => {
     console.log(`Agregado al carrito: ${quantity} x ${product.name}`);
@@ -131,11 +126,10 @@ export default function ProductDetailPage() {
           </Link>
         </div>
 
-        {/* Contenedor responsive */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Columna izquierda: imagen */}
           <div className="bg-white rounded-3xl p-4 shadow-sm border border-gray-100">
-            <div className="relative h-[400px] lg:h-[500px] w-full rounded-2xl overflow-hidden">
+            <div className="relative h-100 lg:h-125 w-full rounded-2xl overflow-hidden">
               <Image
                 src={product.image}
                 alt={product.name}
@@ -149,10 +143,24 @@ export default function ProductDetailPage() {
 
           {/* Columna derecha: información */}
           <div className="flex flex-col">
-            {/* Categoría */}
-            <span className="inline-block bg-pucara-primary/10 text-pucara-primary px-4 py-1.5 rounded-full text-sm font-medium w-fit mb-4">
-              {product.category}
-            </span>
+            {/* Categoría y favorito */}
+            <div className="flex items-center justify-between mb-4">
+              <span className="inline-block bg-pucara-primary/10 text-pucara-primary px-4 py-1.5 rounded-full text-sm font-medium">
+                {product.category}
+              </span>
+              <button
+                onClick={toggleFavorito}
+                disabled={loadingFav}
+                className="p-2 text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
+                aria-label={isFavorito ? "Quitar de favoritos" : "Agregar a favoritos"}
+              >
+                {isFavorito ? (
+                  <HeartSolidIcon className="w-6 h-6 text-red-500" />
+                ) : (
+                  <HeartIcon className="w-6 h-6" />
+                )}
+              </button>
+            </div>
 
             {/* Nombre */}
             <h1 className="text-3xl md:text-4xl font-bold text-pucara-black mb-3">

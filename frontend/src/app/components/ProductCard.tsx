@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingCartIcon, ChatBubbleOvalLeftEllipsisIcon } from "@heroicons/react/24/outline";
+import { ShoppingCartIcon, HeartIcon } from "@heroicons/react/24/outline";
+import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
 import { Product } from "@/app/types/product";
-
 
 interface ProductCardProps {
   product: Product;
@@ -14,6 +14,60 @@ interface ProductCardProps {
 export const ProductCard = ({ product }: ProductCardProps) => {
   const [rotate, setRotate] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
+  const [isFavorito, setIsFavorito] = useState(false);
+  const [loadingFav, setLoadingFav] = useState(false);
+
+  // Verificar si el producto está en favoritos al montar
+  useEffect(() => {
+    const checkFavorito = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      try {
+        const res = await fetch("/api/favoritos", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (res.ok && data.favoritos) {
+          setIsFavorito(data.favoritos.includes(product.id));
+        }
+      } catch (error) {
+        console.error("Error al verificar favoritos", error);
+      }
+    };
+    checkFavorito();
+  }, [product.id]);
+
+  const toggleFavorito = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      window.location.href = "/login";
+      return;
+    }
+
+    setLoadingFav(true);
+    try {
+      const res = await fetch("/api/favoritos", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ producto_id: product.id }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setIsFavorito(data.favorito);
+      }
+    } catch (error) {
+      console.error("Error al cambiar favorito", error);
+    } finally {
+      setLoadingFav(false);
+    }
+  };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const card = e.currentTarget;
@@ -33,7 +87,6 @@ export const ProductCard = ({ product }: ProductCardProps) => {
     e.preventDefault();
     e.stopPropagation();
     console.log("Agregar al carrito:", product.name);
-    // Aquí irá la lógica del carrito
   };
 
   return (
@@ -47,8 +100,21 @@ export const ProductCard = ({ product }: ProductCardProps) => {
         }}
         onMouseMove={handleMouseMove}
       >
-        {/* Imagen con perspectiva 3D */}
-        <div className="relative h-64 w-full bg-gray-100/30 overflow-hidden">
+        {/* Imagen con corazón */}
+        <div className="relative h-40 sm:h-64 w-full bg-gray-100/30 overflow-hidden">
+          <button
+            onClick={toggleFavorito}
+            disabled={loadingFav}
+            className="absolute top-2 right-2 z-20 p-1.5 bg-white/80 backdrop-blur-sm rounded-full shadow-md hover:bg-white transition-colors disabled:opacity-50"
+            aria-label={isFavorito ? "Quitar de favoritos" : "Agregar a favoritos"}
+          >
+            {isFavorito ? (
+              <HeartSolidIcon className="w-5 h-5 text-red-500" />
+            ) : (
+              <HeartIcon className="w-5 h-5 text-gray-600" />
+            )}
+          </button>
+
           <div
             className="relative h-full w-full transition-[transform,filter] duration-700 ease-out"
             style={{
@@ -64,47 +130,46 @@ export const ProductCard = ({ product }: ProductCardProps) => {
               src={product.image}
               alt={product.name}
               fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
               className="object-cover transform-gpu"
             />
             <div
-              className={`absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent transition-opacity duration-300 ${
+              className={`absolute inset-0 bg-linear-to-t from-black/20 via-transparent to-transparent transition-opacity duration-300 ${
                 isHovered ? "opacity-0" : "opacity-100"
               }`}
             />
           </div>
-          <span className="absolute top-3 right-3 bg-pucara-primary text-pucara-white px-3 py-1 text-xs font-medium rounded-full z-10 shadow-md">
-            {product.category}
-          </span>
         </div>
 
-        {/* Información del producto */}
-        <div className="flex flex-col p-5 transition-all duration-300 group-hover:translate-y-[-2px]">
-          <h3 className="text-lg font-semibold text-pucara-black mb-2 line-clamp-1">
-            {product.name}
-          </h3>
+        {/* Información */}
+        <div className="flex flex-col p-3 sm:p-5 transition-all duration-300 group-hover:-translate-y-0.5">
+          <div className="flex items-center justify-between gap-2 mb-1 sm:mb-2">
+            <h3 className="text-sm sm:text-lg font-semibold text-pucara-black line-clamp-1">
+              {product.name}
+            </h3>
+            <span className="text-xs bg-pucara-primary/10 text-pucara-primary px-2 py-0.5 rounded-full font-medium whitespace-nowrap">
+              {product.category}
+            </span>
+          </div>
+
           <div className="flex justify-between items-center">
-            <span className="text-2xl font-bold text-pucara-primary">
+            <span className="text-xl sm:text-2xl font-bold text-pucara-primary">
               ${product.price.toFixed(2)}
             </span>
-
-            <div className="flex gap-2" onClick={(e) => e.preventDefault()}>
-
-              <button
-                onClick={handleAddToCart}
-                className="inline-flex items-center gap-2 bg-pucara-primary text-pucara-white px-5 py-2 rounded-full hover:bg-pucara-accent transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
-              >
-                <ShoppingCartIcon className="w-4 h-4" />
-                <span className="hidden sm:inline">Agregar</span>
-              </button>
-            </div>
+            <button
+              onClick={handleAddToCart}
+              className="inline-flex items-center gap-1 sm:gap-2 bg-pucara-primary text-pucara-white px-3 sm:px-5 py-1.5 sm:py-2 rounded-full hover:bg-pucara-accent transition-all duration-200 text-xs sm:text-sm font-medium shadow-sm hover:shadow-md"
+            >
+              <ShoppingCartIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Agregar</span>
+            </button>
           </div>
         </div>
 
         {/* Brillo animado */}
         {isHovered && (
           <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50 animate-shine" />
+            <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent opacity-50 animate-shine" />
           </div>
         )}
       </div>
