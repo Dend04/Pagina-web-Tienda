@@ -12,6 +12,23 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
+// Hook personalizado para detectar media query
+function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    if (media.matches !== matches) {
+      setMatches(media.matches);
+    }
+    const listener = () => setMatches(media.matches);
+    window.addEventListener('resize', listener);
+    return () => window.removeEventListener('resize', listener);
+  }, [matches, query]);
+
+  return matches;
+}
+
 interface NavigationItem {
   name: string;
   icon: ComponentType<SVGProps<SVGSVGElement>>;
@@ -75,9 +92,12 @@ export const AppLogo: React.FC = () => {
           priority
         />
       </div>
-      <span className="text-xl font-bold text-pucara-black">
-        Pucara<span className="text-pucara-primary">.</span>
+      {/* Nombre con gradiente de naranja a azul */}
+      <span className="text-xl font-bold bg-linear-to-r from-pucara-primary to-pucara-blue bg-clip-text text-transparent">
+        Pucara
       </span>
+      {/* Punto en color sólido para destacar */}
+      <span className="text-xl font-bold text-pucara-primary">.</span>
     </Link>
   );
 };
@@ -149,6 +169,8 @@ export function MainHeader() {
   const router = useRouter();
   const [user, setUser] = useState<UserData | null>(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -179,6 +201,8 @@ export function MainHeader() {
     router.push("/");
   };
 
+  const closeMobileMenu = () => setMobileMenuOpen(false);
+
   return (
     <>
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
@@ -208,43 +232,102 @@ export function MainHeader() {
 
               {user ? (
                 <>
-                  <span className="text-sm text-gray-700 hidden md:inline">
-                    {user.nombre_usuario || user.correo}
-                  </span>
+                  {/* Desktop: nombre visible + avatar enlace a perfil + botón logout */}
+                  {!isMobile && (
+                    <>
+                      <span className="text-sm text-gray-700 hidden md:inline">
+                        {user.nombre_usuario || user.correo}
+                      </span>
+                      <Link
+                        href="/perfil"
+                        className="group relative flex items-center"
+                      >
+                        <div className="h-8 w-8 flex items-center justify-center rounded-full bg-pucara-primary/10 overflow-hidden">
+                          {user.imagen ? (
+                            <Image
+                              src={user.imagen}
+                              alt="Foto de perfil"
+                              width={32}
+                              height={32}
+                              className="object-cover w-full h-full"
+                            />
+                          ) : (
+                            <UserCircleIcon className="h-5 w-5 text-pucara-primary" />
+                          )}
+                        </div>
+                        <span className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-2 py-1 text-xs font-medium text-white bg-gray-800 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+                          Perfil
+                        </span>
+                        <span className="sr-only">Perfil</span>
+                      </Link>
+                      <button
+                        onClick={() => setShowLogoutModal(true)}
+                        className="group relative p-1 sm:p-2 text-gray-600 hover:text-red-600 transition-colors"
+                        aria-label="Cerrar sesión"
+                      >
+                        <XMarkIcon className="w-5 h-5" />
+                        <span className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-2 py-1 text-xs font-medium text-white bg-gray-800 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+                          Cerrar sesión
+                        </span>
+                      </button>
+                    </>
+                  )}
 
-                  <Link
-                    href="/perfil"
-                    className="group relative flex items-center"
-                  >
-                    <div className="h-8 w-8 flex items-center justify-center rounded-full bg-pucara-primary/10 overflow-hidden">
-                      {user.imagen ? (
-                        <Image
-                          src={user.imagen}
-                          alt="Foto de perfil"
-                          width={32}
-                          height={32}
-                          className="object-cover w-full h-full"
-                        />
-                      ) : (
-                        <UserCircleIcon className="h-5 w-5 text-pucara-primary" />
+                  {/* Móvil: botón que combina avatar + nombre, al hacer clic abre menú */}
+                  {isMobile && (
+                    <div className="relative">
+                      <button
+                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                        className="flex items-center gap-2 p-1 rounded-full hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="h-8 w-8 rounded-full bg-pucara-primary/10 overflow-hidden">
+                          {user.imagen ? (
+                            <Image
+                              src={user.imagen}
+                              alt="Foto de perfil"
+                              width={32}
+                              height={32}
+                              className="object-cover w-full h-full"
+                            />
+                          ) : (
+                            <UserCircleIcon className="h-5 w-5 text-pucara-primary" />
+                          )}
+                        </div>
+                        <span className="text-sm font-medium text-gray-700 max-w-25 truncate">
+                          {user.nombre_usuario || user.correo}
+                        </span>
+                      </button>
+
+                      {/* Dropdown móvil */}
+                      {mobileMenuOpen && (
+                        <>
+                          {/* Fondo oscuro para cerrar al tocar fuera */}
+                          <div
+                            className="fixed inset-0 z-40"
+                            onClick={closeMobileMenu}
+                          />
+                          <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+                            <Link
+                              href="/perfil"
+                              className="block px-4 py-2 text-sm text-gray-700 hover:bg-pucara-primary/10 hover:text-pucara-primary transition-colors"
+                              onClick={closeMobileMenu}
+                            >
+                              Perfil
+                            </Link>
+                            <button
+                              onClick={() => {
+                                closeMobileMenu();
+                                setShowLogoutModal(true);
+                              }}
+                              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors"
+                            >
+                              Cerrar sesión
+                            </button>
+                          </div>
+                        </>
                       )}
                     </div>
-                    <span className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-2 py-1 text-xs font-medium text-white bg-gray-800 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-                      Perfil
-                    </span>
-                    <span className="sr-only">Perfil</span>
-                  </Link>
-
-                  <button
-                    onClick={() => setShowLogoutModal(true)}
-                    className="group relative p-1 sm:p-2 text-gray-600 hover:text-red-600 transition-colors"
-                    aria-label="Cerrar sesión"
-                  >
-                    <XMarkIcon className="w-5 h-5" />
-                    <span className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-2 py-1 text-xs font-medium text-white bg-gray-800 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-                      Cerrar sesión
-                    </span>
-                  </button>
+                  )}
                 </>
               ) : (
                 <Link
