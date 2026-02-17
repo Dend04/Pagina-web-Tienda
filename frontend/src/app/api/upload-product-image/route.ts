@@ -31,6 +31,11 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error('Error al subir imagen:', error)
+      if (error.message?.includes('Bucket not found')) {
+        return NextResponse.json({
+          error: 'El bucket "productos" no existe. Por favor, créalo en Supabase Storage.'
+        }, { status: 500 })
+      }
       return NextResponse.json({ error: 'Error al subir la imagen' }, { status: 500 })
     }
 

@@ -3,7 +3,7 @@
 import { Product } from "@/app/types/product";
 import Image from "next/image";
 import Link from "next/link";
-import { PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { PencilIcon, PhotoIcon, TrashIcon } from "@heroicons/react/24/outline";
 
 interface ProductTableProps {
   products: Product[];
@@ -11,7 +11,11 @@ interface ProductTableProps {
   onDelete: (product: Product) => void;
 }
 
-export default function ProductTable({ products, onEdit, onDelete }: ProductTableProps) {
+export default function ProductTable({
+  products,
+  onEdit,
+  onDelete,
+}: ProductTableProps) {
   return (
     <>
       {/* Vista de escritorio: tabla */}
@@ -29,13 +33,32 @@ export default function ProductTable({ products, onEdit, onDelete }: ProductTabl
           </thead>
           <tbody>
             {products.map((product) => (
-              <tr key={product.id} className="border-b border-gray-100 hover:bg-gray-50">
+              <tr
+                key={product.id}
+                className="border-b border-gray-100 hover:bg-gray-50"
+              >
                 <td className="px-4 py-3">
-                  <Link href={`/producto/${product.id}`} className="flex items-center gap-3">
-                    <div className="relative w-10 h-10 rounded-lg overflow-hidden bg-gray-100">
-                      <Image src={product.image} alt={product.name} fill className="object-cover" />
+                  <Link
+                    href={`/producto/${product.id}`}
+                    className="flex items-center gap-3"
+                  >
+                    <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-gray-100 shrink-0">
+                      {product.image ? (
+                        <Image
+                          src={product.image}
+                          alt={product.name}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <PhotoIcon className="w-6 h-6 text-gray-400" />
+                        </div>
+                      )}
                     </div>
-                    <span className="font-medium text-pucara-black">{product.name}</span>
+                    <span className="font-medium text-pucara-black">
+                      {product.name}
+                    </span>
                   </Link>
                 </td>
                 <td className="px-4 py-3">
@@ -47,11 +70,13 @@ export default function ProductTable({ products, onEdit, onDelete }: ProductTabl
                   ${product.price.toFixed(2)}
                 </td>
                 <td className="px-4 py-3">
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    product.stock && product.stock > 0
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-700"
-                  }`}>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs ${
+                      product.stock && product.stock > 0
+                        ? "bg-green-100 text-green-700"
+                        : "bg-red-100 text-red-700"
+                    }`}
+                  >
                     {product.stock ?? 0} uds
                   </span>
                 </td>
@@ -85,13 +110,27 @@ export default function ProductTable({ products, onEdit, onDelete }: ProductTabl
       {/* Vista móvil: tarjetas */}
       <div className="grid grid-cols-1 gap-4 md:hidden">
         {products.map((product) => (
-          <div key={product.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+          <div
+            key={product.id}
+            className="bg-white rounded-xl shadow-sm border border-gray-100 p-4"
+          >
             <div className="flex items-start gap-3">
-              <Link href={`/producto/${product.id}`} className="relative w-16 h-16 rounded-lg overflow-hidden bg-gray-100 shrink-0">
-                <Image src={product.image} alt={product.name} fill className="object-cover" />
+              <Link
+                href={`/producto/${product.id}`}
+                className="relative w-16 h-16 rounded-lg overflow-hidden bg-gray-100 shrink-0"
+              >
+                <Image
+                  src={product.image}
+                  alt={product.name}
+                  fill
+                  className="object-cover"
+                />
               </Link>
               <div className="flex-1 min-w-0">
-                <Link href={`/producto/${product.id}`} className="font-semibold text-pucara-black hover:underline">
+                <Link
+                  href={`/producto/${product.id}`}
+                  className="font-semibold text-pucara-black hover:underline"
+                >
                   {product.name}
                 </Link>
                 <div className="flex items-center gap-2 mt-1">
@@ -106,11 +145,13 @@ export default function ProductTable({ products, onEdit, onDelete }: ProductTabl
                   <span className="text-lg font-bold text-pucara-primary">
                     ${product.price.toFixed(2)}
                   </span>
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    product.stock && product.stock > 0
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-700"
-                  }`}>
+                  <span
+                    className={`text-xs px-2 py-1 rounded-full ${
+                      product.stock && product.stock > 0
+                        ? "bg-green-100 text-green-700"
+                        : "bg-red-100 text-red-700"
+                    }`}
+                  >
                     Stock: {product.stock ?? 0}
                   </span>
                 </div>

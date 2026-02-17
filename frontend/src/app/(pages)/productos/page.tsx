@@ -8,51 +8,40 @@ import ProductTable from "@/app/components/ProductTable";
 import ProductModal from "@/app/components/ProductModal";
 import { Product } from "@/app/types/product";
 import { PlusIcon } from "@heroicons/react/24/outline";
-import { supabaseAdmin } from "@/lib/supabaseAdmin"; // Asegúrate de tener este cliente
+import { supabaseAdmin } from "@/lib/supabaseAdmin"; // Ojo: esto es solo para cargar datos, no para insertar
 
-// Datos de ejemplo iniciales (después vendrán de Supabase)
-const initialProducts: Product[] = [
-  {
-    id: 1,
-    name: "Zapatillas Deportivas",
-    price: 89.99,
-    category: "Calzado",
-    image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-    stock: 25,
-    rating: 4.5,
-    minQuantity: 1,
-    maxQuantity: 5,
-  },
-  {
-    id: 2,
-    name: "Reloj Inteligente",
-    price: 199.99,
-    category: "Tecnología",
-    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-    stock: 12,
-    rating: 4.2,
-    minQuantity: 1,
-    maxQuantity: 3,
-  },
-  // ... más productos (puedes copiar los que ya tienes en el dashboard)
-];
+// Nota: No uses supabaseAdmin en el cliente; mejor crea una API para obtener productos.
+// Pero por simplicidad, asumimos que tienes una API GET /api/products.
+// Vamos a crear un fetch a /api/products para obtener la lista.
 
 export default function ProductosPage() {
-  const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Función para cargar productos desde Supabase (cuando esté listo)
+  // Cargar productos desde Supabase (usando una API route)
   const loadProducts = async () => {
-    // const { data, error } = await supabaseAdmin.from('productos').select('*');
-    // if (data) setProducts(data);
+    try {
+      const res = await fetch('/api/products'); // Necesitas crear esta ruta GET
+      const data = await res.json();
+      if (res.ok) {
+        setProducts(data);
+        setFilteredProducts(data);
+      } else {
+        console.error('Error cargando productos:', data.error);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    // loadProducts();
+    loadProducts();
   }, []);
 
   // Filtrado en tiempo real
@@ -65,45 +54,50 @@ export default function ProductosPage() {
     setFilteredProducts(filtered);
   }, [searchTerm, products]);
 
-  const handleSave = async (productData: Partial<Product>) => {
-    setLoading(true);
+  const handleSave = async (productData: Partial<Product>, imageUrls: string[]) => {
     try {
-      if (editingProduct) {
-        // Editar producto existente
-        // const { error } = await supabaseAdmin
-        //   .from('productos')
-        //   .update(productData)
-        //   .eq('id', editingProduct.id);
-        // if (!error) {
-        //   setProducts(products.map(p => p.id === editingProduct.id ? { ...p, ...productData } : p));
-        // }
-        // Simulación:
-        setProducts(products.map(p =>
-          p.id === editingProduct.id ? { ...p, ...productData, id: p.id } : p
-        ));
-      } else {
-        // Crear nuevo producto
-        // const { data, error } = await supabaseAdmin
-        //   .from('productos')
-        //   .insert([productData])
-        //   .select();
-        // if (data) setProducts([...products, data[0]]);
-        // Simulación:
-        const newId = Math.max(...products.map(p => p.id), 0) + 1;
-        setProducts([...products, { ...productData, id: newId } as Product]);
+      const res = await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: productData.name,
+          price: productData.price,
+          category: productData.category,
+          stock: productData.stock ?? 5, // valor por defecto 5
+          description: productData.description,
+          minQuantity: productData.minQuantity,
+          maxQuantity: productData.maxQuantity,
+          images: imageUrls,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Error al guardar');
       }
-    } finally {
-      setLoading(false);
+
+      // Recargar productos para actualizar la tabla
+      await loadProducts();
       setIsModalOpen(false);
       setEditingProduct(null);
+    } catch (error) {
+      console.error('Error saving product:', error);
+      alert('Error al guardar el producto');
     }
   };
 
   const handleDelete = async (product: Product) => {
     if (confirm(`¿Estás seguro de eliminar "${product.name}"?`)) {
-      // const { error } = await supabaseAdmin.from('productos').delete().eq('id', product.id);
-      // if (!error) setProducts(products.filter(p => p.id !== product.id));
-      setProducts(products.filter(p => p.id !== product.id));
+      try {
+        const res = await fetch(`/api/products/${product.id}`, { method: 'DELETE' });
+        if (res.ok) {
+          await loadProducts();
+        } else {
+          alert('Error al eliminar');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
     }
   };
 
@@ -116,6 +110,18 @@ export default function ProductosPage() {
     setEditingProduct(null);
     setIsModalOpen(true);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-pucara-white flex flex-col">
+        <MainHeader />
+        <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          <p className="text-center text-gray-500">Cargando productos...</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-pucara-white flex flex-col">
@@ -138,7 +144,6 @@ export default function ProductosPage() {
           </button>
         </div>
 
-        {/* Barra de búsqueda */}
         <div className="mb-6">
           <SearchBar
             value={searchTerm}
@@ -147,7 +152,6 @@ export default function ProductosPage() {
           />
         </div>
 
-        {/* Resultados */}
         {filteredProducts.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
             <p className="text-gray-500">No se encontraron productos</p>
@@ -168,7 +172,6 @@ export default function ProductosPage() {
 
       <Footer />
 
-      {/* Modal para crear/editar */}
       <ProductModal
         isOpen={isModalOpen}
         onClose={() => {

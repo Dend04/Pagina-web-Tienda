@@ -1,15 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { XMarkIcon, PhotoIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon, PhotoIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { Product } from "@/app/types/product";
 import Image from "next/image";
-
 
 interface ProductModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (product: Partial<Product>) => Promise<void>;
+  onSave: (productData: Partial<Product>, imageUrls: string[]) => Promise<void>;
   product?: Product | null;
 }
 
@@ -20,28 +19,22 @@ export default function ProductModal({ isOpen, onClose, onSave, product }: Produ
     category: "",
     stock: 0,
     description: "",
-    image: "",
-    minQuantity: 1,
-    maxQuantity: 99,
   });
   const [loading, setLoading] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (product) {
       setFormData({
-        name: product.name,
-        price: product.price,
-        category: product.category,
-        stock: product.stock || 0,
+        name: product.name || "",
+        price: typeof product.price === "number" ? product.price : 0,
+        category: product.category || "",
+        stock: typeof product.stock === "number" ? product.stock : 0,
         description: product.description || "",
-        image: product.image,
-        minQuantity: product.minQuantity || 1,
-        maxQuantity: product.maxQuantity || 99,
       });
-      setImagePreview(product.image);
+      // Si tuvieras imágenes existentes, podrías cargarlas aquí
     } else {
       setFormData({
         name: "",
@@ -49,60 +42,63 @@ export default function ProductModal({ isOpen, onClose, onSave, product }: Produ
         category: "",
         stock: 0,
         description: "",
-        image: "",
-        minQuantity: 1,
-        maxQuantity: 99,
       });
-      setImagePreview(null);
-      setImageFile(null);
+      setImageFiles([]);
+      setImagePreviews([]);
     }
   }, [product]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+    const files = e.target.files;
+    if (files) {
+      const newFiles = Array.from(files);
+      setImageFiles((prev) => [...prev, ...newFiles]);
+      newFiles.forEach((file) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreviews((prev) => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
     }
   };
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoading(true);
-  try {
-    let imageUrl = formData.image;
-    if (imageFile) {
-      setUploading(true);
-      const formDataUpload = new FormData();
-      formDataUpload.append("file", imageFile);
+  const removeImage = (index: number) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+  };
 
-      const uploadRes = await fetch("/api/upload-product-image", {
-        method: "POST",
-        body: formDataUpload,
-      });
-
-      const uploadData = await uploadRes.json();
-      if (!uploadRes.ok) {
-        throw new Error(uploadData.error || "Error al subir la imagen");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const uploadedUrls: string[] = [];
+      if (imageFiles.length > 0) {
+        setUploading(true);
+        for (const file of imageFiles) {
+          const formDataUpload = new FormData();
+          formDataUpload.append("file", file);
+          const uploadRes = await fetch("/api/upload-product-image", {
+            method: "POST",
+            body: formDataUpload,
+          });
+          const uploadData = await uploadRes.json();
+          if (!uploadRes.ok) {
+            throw new Error(uploadData.error || "Error al subir imagen");
+          }
+          uploadedUrls.push(uploadData.url);
+        }
+        setUploading(false);
       }
-      imageUrl = uploadData.url;
+      await onSave(formData, uploadedUrls);
+      onClose();
+    } catch (error) {
+      console.error("Error saving product:", error);
+    } finally {
+      setLoading(false);
       setUploading(false);
     }
-
-    const productData = { ...formData, image: imageUrl };
-    await onSave(productData);
-    onClose();
-  } catch (error) {
-    console.error("Error saving product:", error);
-  } finally {
-    setLoading(false);
-    setUploading(false);
-  }
-};
+  };
 
   if (!isOpen) return null;
 
@@ -118,8 +114,8 @@ const handleSubmit = async (e: React.FormEvent) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Nombre */}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
@@ -129,6 +125,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pucara-primary/50 focus:border-pucara-primary outline-none"
+                placeholder="Ej. Zapatillas deportivas"
               />
             </div>
 
@@ -141,8 +138,9 @@ const handleSubmit = async (e: React.FormEvent) => {
                 min="0"
                 step="0.01"
                 value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
+                onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
                 className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pucara-primary/50 focus:border-pucara-primary outline-none"
+                placeholder="0.00"
               />
             </div>
             <div>
@@ -153,10 +151,11 @@ const handleSubmit = async (e: React.FormEvent) => {
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pucara-primary/50 focus:border-pucara-primary outline-none"
+                placeholder="Ej. Calzado"
               />
             </div>
 
-            {/* Stock y cantidades */}
+            {/* Stock */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
               <input
@@ -164,62 +163,46 @@ const handleSubmit = async (e: React.FormEvent) => {
                 required
                 min="0"
                 value={formData.stock}
-                onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) })}
+                onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })}
                 className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pucara-primary/50 focus:border-pucara-primary outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Cantidad mínima</label>
-              <input
-                type="number"
-                min="1"
-                value={formData.minQuantity}
-                onChange={(e) => setFormData({ ...formData, minQuantity: parseInt(e.target.value) })}
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pucara-primary/50 focus:border-pucara-primary outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Cantidad máxima</label>
-              <input
-                type="number"
-                min="1"
-                value={formData.maxQuantity}
-                onChange={(e) => setFormData({ ...formData, maxQuantity: parseInt(e.target.value) })}
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pucara-primary/50 focus:border-pucara-primary outline-none"
+                placeholder="0"
               />
             </div>
 
-            {/* Imagen */}
+            {/* Imágenes múltiples */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Imagen del producto</label>
-              <div className="flex items-center gap-4">
-                <div className="relative w-24 h-24 rounded-lg border border-gray-200 overflow-hidden bg-gray-50">
-                  {imagePreview ? (
+              <label className="block text-sm font-medium text-gray-700 mb-2">Imágenes del producto</label>
+              <div className="flex flex-wrap gap-4 mb-2">
+                {imagePreviews.map((preview, index) => (
+                  <div key={index} className="relative w-24 h-24 rounded-lg border border-gray-200 overflow-hidden bg-gray-50 group">
                     <Image
-                      src={imagePreview}
-                      alt="Preview"
+                      src={preview}
+                      alt={`Preview ${index}`}
                       fill
                       className="object-cover"
                     />
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-gray-400">
-                      <PhotoIcon className="w-8 h-8" />
-                    </div>
-                  )}
-                </div>
-                <label className="cursor-pointer bg-pucara-primary text-white px-4 py-2 rounded-lg hover:bg-pucara-accent transition-colors text-sm">
-                  Seleccionar imagen
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <TrashIcon className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+                <label className="cursor-pointer w-24 h-24 rounded-lg border-2 border-dashed border-gray-300 hover:border-pucara-primary flex flex-col items-center justify-center text-gray-400 hover:text-pucara-primary transition-colors">
+                  <PlusIcon className="w-8 h-8" />
+                  <span className="text-xs mt-1">Agregar</span>
                   <input
                     type="file"
                     accept="image/*"
+                    multiple
                     onChange={handleImageChange}
                     className="hidden"
                   />
                 </label>
-                {imageFile && (
-                  <span className="text-xs text-gray-500">{imageFile.name}</span>
-                )}
               </div>
+              <p className="text-xs text-gray-500">Puedes seleccionar varias imágenes. La primera será la principal.</p>
             </div>
 
             {/* Descripción */}
@@ -230,6 +213,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pucara-primary/50 focus:border-pucara-primary outline-none"
+                placeholder="Descripción del producto..."
               />
             </div>
           </div>
@@ -248,7 +232,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               disabled={loading || uploading}
               className="px-6 py-2 bg-pucara-primary text-white rounded-full hover:bg-pucara-accent transition-colors disabled:opacity-50 flex items-center gap-2"
             >
-              {(loading || uploading) ? (
+              {loading || uploading ? (
                 <>
                   <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -256,8 +240,10 @@ const handleSubmit = async (e: React.FormEvent) => {
                   </svg>
                   <span>Guardando...</span>
                 </>
+              ) : product ? (
+                "Actualizar"
               ) : (
-                product ? "Actualizar" : "Crear"
+                "Crear"
               )}
             </button>
           </div>
