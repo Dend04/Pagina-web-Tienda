@@ -6,23 +6,23 @@ import { Footer } from "@/app/components/Footer";
 import SearchBar from "@/app/components/SearchBar";
 import ProductTable from "@/app/components/ProductTable";
 import ProductModal from "@/app/components/ProductModal";
-import DeleteProductModal from "@/app/components/DeleteProductModal"; // <-- Importa el nuevo modal
-import { Product } from "@/app/types/product";
+import DeleteProductModal from "@/app/components/DeleteProductModal";
 import { PlusIcon } from "@heroicons/react/24/outline";
+import { ProductListItem, ProductDetail } from "@/app/types/product";
 
 export default function ProductosPage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductListItem[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<ProductListItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingProduct, setEditingProduct] = useState<ProductDetail | null>(null); // Cambiado a ProductDetail
   const [loading, setLoading] = useState(true);
 
   // Estados para el modal de eliminar
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [productToDelete, setProductToDelete] = useState<ProductListItem | null>(null);
 
-  // Cargar productos
+  // Cargar productos (lista resumida)
   const loadProducts = async () => {
     try {
       const res = await fetch('/api/products');
@@ -54,10 +54,15 @@ export default function ProductosPage() {
     setFilteredProducts(filtered);
   }, [searchTerm, products]);
 
-  const handleSave = async (productData: Partial<Product>, imageUrls: string[]) => {
+  // Guardar producto (crear o actualizar)
+  const handleSave = async (productData: Partial<ProductDetail>, imageUrls: string[]) => {
     try {
-      const res = await fetch('/api/products', {
-        method: 'POST',
+      const isEditing = !!editingProduct?.id;
+      const url = isEditing ? `/api/products/${editingProduct.id}` : '/api/products';
+      const method = isEditing ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: productData.name,
@@ -65,8 +70,6 @@ export default function ProductosPage() {
           category: productData.category,
           stock: productData.stock ?? 5,
           description: productData.description,
-          minQuantity: productData.minQuantity,
-          maxQuantity: productData.maxQuantity,
           images: imageUrls,
         }),
       });
@@ -86,7 +89,7 @@ export default function ProductosPage() {
   };
 
   // Abre el modal de confirmación para eliminar
-  const handleDeleteClick = (product: Product) => {
+  const handleDeleteClick = (product: ProductListItem) => {
     setProductToDelete(product);
     setIsDeleteModalOpen(true);
   };
@@ -109,7 +112,6 @@ export default function ProductosPage() {
       console.error('Error:', error);
       alert('Error al eliminar el producto');
     } finally {
-      // Cerrar modal y limpiar estado
       setIsDeleteModalOpen(false);
       setProductToDelete(null);
     }
@@ -120,9 +122,20 @@ export default function ProductosPage() {
     setProductToDelete(null);
   };
 
-  const handleEdit = (product: Product) => {
-    setEditingProduct(product);
-    setIsModalOpen(true);
+  // Editar: cargar producto completo con imágenes
+  const handleEdit = async (product: ProductListItem) => {
+    try {
+      const res = await fetch(`/api/products/${product.id}`);
+      if (res.ok) {
+        const fullProduct = await res.json();
+        setEditingProduct(fullProduct); // fullProduct es de tipo ProductDetail
+        setIsModalOpen(true);
+      } else {
+        console.error('Error al cargar el producto completo');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
   };
 
   const handleNew = () => {
@@ -183,7 +196,7 @@ export default function ProductosPage() {
             <ProductTable
               products={filteredProducts}
               onEdit={handleEdit}
-              onDelete={handleDeleteClick} // <-- Usa el nuevo manejador
+              onDelete={handleDeleteClick}
             />
           </>
         )}

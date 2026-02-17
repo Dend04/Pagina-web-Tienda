@@ -1,14 +1,15 @@
 "use client";
 
-import { Product } from "@/app/types/product";
+
 import Image from "next/image";
 import Link from "next/link";
 import { PencilIcon, PhotoIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { ProductListItem } from "../types/product";
 
 interface ProductTableProps {
-  products: Product[];
-  onEdit: (product: Product) => void;
-  onDelete: (product: Product) => void;
+  products: ProductListItem[];
+  onEdit: (product: ProductListItem) => void;
+  onDelete: (product: ProductListItem) => void;
 }
 
 export default function ProductTable({

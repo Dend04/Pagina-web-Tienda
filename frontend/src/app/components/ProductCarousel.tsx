@@ -4,10 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { ProductCard } from "./ProductCard";
-import { Product } from "@/app/types/product";
+import { ProductListItem } from "../types/product";
 
 interface ProductCarouselProps {
-  products: Product[];
+  products: ProductListItem[];
   title?: string;
 }
 

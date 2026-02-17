@@ -1,15 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { XMarkIcon, PhotoIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { Product } from "@/app/types/product";
+import { XMarkIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
+
 import Image from "next/image";
+import { ProductDetail } from "../types/product";
 
 interface ProductModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (productData: Partial<Product>, imageUrls: string[]) => Promise<void>;
-  product?: Product | null;
+  onSave: (productData: Partial<ProductDetail>, imageUrls: string[]) => Promise<void>;
+  product?: ProductDetail | null; // Puede tener la propiedad 'images'
 }
 
 export default function ProductModal({ isOpen, onClose, onSave, product }: ProductModalProps) {
@@ -21,10 +22,12 @@ export default function ProductModal({ isOpen, onClose, onSave, product }: Produ
     description: "",
   });
   const [loading, setLoading] = useState(false);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
 
+  // Cargar datos cuando se abre el modal (nuevo o edición)
   useEffect(() => {
     if (product) {
       setFormData({
@@ -34,8 +37,12 @@ export default function ProductModal({ isOpen, onClose, onSave, product }: Produ
         stock: typeof product.stock === "number" ? product.stock : 0,
         description: product.description || "",
       });
-      // Si tuvieras imágenes existentes, podrías cargarlas aquí
+      // Cargar imágenes existentes si vienen en el producto
+      setExistingImages(product.images || []);
+      setImageFiles([]);
+      setImagePreviews([]);
     } else {
+      // Modo nuevo producto
       setFormData({
         name: "",
         price: 0,
@@ -43,6 +50,7 @@ export default function ProductModal({ isOpen, onClose, onSave, product }: Produ
         stock: 0,
         description: "",
       });
+      setExistingImages([]);
       setImageFiles([]);
       setImagePreviews([]);
     }
@@ -63,7 +71,11 @@ export default function ProductModal({ isOpen, onClose, onSave, product }: Produ
     }
   };
 
-  const removeImage = (index: number) => {
+  const removeExistingImage = (index: number) => {
+    setExistingImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const removeNewImage = (index: number) => {
     setImageFiles((prev) => prev.filter((_, i) => i !== index));
     setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
@@ -72,7 +84,8 @@ export default function ProductModal({ isOpen, onClose, onSave, product }: Produ
     e.preventDefault();
     setLoading(true);
     try {
-      const uploadedUrls: string[] = [];
+      // Subir nuevas imágenes
+      const newUploadedUrls: string[] = [];
       if (imageFiles.length > 0) {
         setUploading(true);
         for (const file of imageFiles) {
@@ -86,11 +99,16 @@ export default function ProductModal({ isOpen, onClose, onSave, product }: Produ
           if (!uploadRes.ok) {
             throw new Error(uploadData.error || "Error al subir imagen");
           }
-          uploadedUrls.push(uploadData.url);
+          newUploadedUrls.push(uploadData.url);
         }
         setUploading(false);
       }
-      await onSave(formData, uploadedUrls);
+
+      // Combinar imágenes existentes (que no se eliminaron) con las nuevas
+      const allImageUrls = [...existingImages, ...newUploadedUrls];
+
+      // Llamar a la función onSave del padre
+      await onSave(formData, allImageUrls);
       onClose();
     } catch (error) {
       console.error("Error saving product:", error);
@@ -173,8 +191,27 @@ export default function ProductModal({ isOpen, onClose, onSave, product }: Produ
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">Imágenes del producto</label>
               <div className="flex flex-wrap gap-4 mb-2">
+                {/* Imágenes existentes */}
+                {existingImages.map((url, index) => (
+                  <div key={`existing-${index}`} className="relative w-24 h-24 rounded-lg border border-gray-200 overflow-hidden bg-gray-50 group">
+                    <Image
+                      src={url}
+                      alt={`Imagen existente ${index}`}
+                      fill
+                      className="object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeExistingImage(index)}
+                      className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <TrashIcon className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+                {/* Nuevas imágenes subidas */}
                 {imagePreviews.map((preview, index) => (
-                  <div key={index} className="relative w-24 h-24 rounded-lg border border-gray-200 overflow-hidden bg-gray-50 group">
+                  <div key={`new-${index}`} className="relative w-24 h-24 rounded-lg border border-gray-200 overflow-hidden bg-gray-50 group">
                     <Image
                       src={preview}
                       alt={`Preview ${index}`}
@@ -183,13 +220,14 @@ export default function ProductModal({ isOpen, onClose, onSave, product }: Produ
                     />
                     <button
                       type="button"
-                      onClick={() => removeImage(index)}
+                      onClick={() => removeNewImage(index)}
                       className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                     >
                       <TrashIcon className="w-4 h-4" />
                     </button>
                   </div>
                 ))}
+                {/* Botón para agregar */}
                 <label className="cursor-pointer w-24 h-24 rounded-lg border-2 border-dashed border-gray-300 hover:border-pucara-primary flex flex-col items-center justify-center text-gray-400 hover:text-pucara-primary transition-colors">
                   <PlusIcon className="w-8 h-8" />
                   <span className="text-xs mt-1">Agregar</span>
@@ -202,7 +240,9 @@ export default function ProductModal({ isOpen, onClose, onSave, product }: Produ
                   />
                 </label>
               </div>
-              <p className="text-xs text-gray-500">Puedes seleccionar varias imágenes. La primera será la principal.</p>
+              <p className="text-xs text-gray-500">
+                Puedes seleccionar varias imágenes. El orden final será: imágenes existentes (en el orden mostrado) seguidas de las nuevas.
+              </p>
             </div>
 
             {/* Descripción */}

@@ -1,10 +1,9 @@
-// src/app/types/product.ts
-export interface Product {
+// types/product.ts
+export interface ProductBase {
   id: number;
   name: string;
   price: number;
   category: string;
-  image: string;
   description?: string;
   rating?: number;
   stock?: number;
@@ -12,4 +11,14 @@ export interface Product {
   maxQuantity?: number;
   createdAt?: string;
   updatedAt?: string;
+}
+
+// Para listados (con una sola imagen)
+export interface ProductListItem extends ProductBase {
+  image: string;
+}
+
+// Para detalle/edición (con todas las imágenes)
+export interface ProductDetail extends ProductBase {
+  images: string[];
 }

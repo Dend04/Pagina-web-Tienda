@@ -5,10 +5,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { ShoppingCartIcon, HeartIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
-import { Product } from "@/app/types/product";
+import { ProductListItem } from "../types/product";
+
 
 interface ProductCardProps {
-  product: Product;
+  product: ProductListItem;
 }
 
 export const ProductCard = ({ product }: ProductCardProps) => {
