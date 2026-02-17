@@ -45,43 +45,48 @@ export const ProductCarousel = ({ products, title }: ProductCarouselProps) => {
 
   return (
     <div className="w-full">
+      {/* Título opcional */}
       {title && (
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-pucara-black">
-            {title}
-          </h2>
-          <div className="flex gap-2">
-            <button
-              onClick={scrollPrev}
-              disabled={prevBtnDisabled}
-              className="p-2 rounded-full bg-white border border-gray-200 text-gray-600 hover:bg-pucara-red hover:text-white hover:border-pucara-red disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              aria-label="Anterior"
-            >
-              <ChevronLeftIcon className="w-5 h-5" />
-            </button>
-            <button
-              onClick={scrollNext}
-              disabled={nextBtnDisabled}
-              className="p-2 rounded-full bg-white border border-gray-200 text-gray-600 hover:bg-pucara-red hover:text-white hover:border-pucara-red disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              aria-label="Siguiente"
-            >
-              <ChevronRightIcon className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
+        <h2 className="text-2xl md:text-3xl font-bold text-pucara-black mb-4">
+          {title}
+        </h2>
       )}
 
-      <div className="overflow-hidden" ref={emblaRef}>
-        <div className="flex">
-          {products.map((product) => (
-            <div
-              key={product.id}
-              className="flex-[0_0_50%] min-w-0 sm:flex-[0_0_50%] lg:flex-[0_0_33.33%] pl-4 first:pl-0"
-            >
-              <ProductCard product={product} />
-            </div>
-          ))}
+      {/* Contenedor relativo para el carrusel y las flechas superpuestas */}
+      <div className="relative">
+        {/* Carrusel */}
+        <div className="overflow-hidden" ref={emblaRef}>
+          <div className="flex">
+            {products.map((product) => (
+              <div
+                key={product.id}
+                className="flex-[0_0_50%] min-w-0 sm:flex-[0_0_50%] lg:flex-[0_0_33.33%] pl-4 first:pl-0"
+              >
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
         </div>
+
+        {/* Botón izquierdo (anterior) */}
+        <button
+          onClick={scrollPrev}
+          disabled={prevBtnDisabled}
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200 text-gray-600 hover:bg-pucara-red  hover:text-pucara-blue hover:border-pucara-red disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md"
+          aria-label="Producto anterior"
+        >
+          <ChevronLeftIcon className="w-5 h-5" />
+        </button>
+
+        {/* Botón derecho (siguiente) */}
+        <button
+          onClick={scrollNext}
+          disabled={nextBtnDisabled}
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-white/80 backdrop-blur-sm border border-gray-200 text-gray-600 hover:bg-pucara-red  hover:text-pucara-blue hover:border-pucara-red disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md"
+          aria-label="Producto siguiente"
+        >
+          <ChevronRightIcon className="w-5 h-5" />
+        </button>
       </div>
     </div>
   );

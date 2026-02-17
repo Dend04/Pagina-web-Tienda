@@ -6,13 +6,9 @@ import { Footer } from "@/app/components/Footer";
 import SearchBar from "@/app/components/SearchBar";
 import ProductTable from "@/app/components/ProductTable";
 import ProductModal from "@/app/components/ProductModal";
+import DeleteProductModal from "@/app/components/DeleteProductModal"; // <-- Importa el nuevo modal
 import { Product } from "@/app/types/product";
 import { PlusIcon } from "@heroicons/react/24/outline";
-import { supabaseAdmin } from "@/lib/supabaseAdmin"; // Ojo: esto es solo para cargar datos, no para insertar
-
-// Nota: No uses supabaseAdmin en el cliente; mejor crea una API para obtener productos.
-// Pero por simplicidad, asumimos que tienes una API GET /api/products.
-// Vamos a crear un fetch a /api/products para obtener la lista.
 
 export default function ProductosPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -22,10 +18,14 @@ export default function ProductosPage() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Cargar productos desde Supabase (usando una API route)
+  // Estados para el modal de eliminar
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+
+  // Cargar productos
   const loadProducts = async () => {
     try {
-      const res = await fetch('/api/products'); // Necesitas crear esta ruta GET
+      const res = await fetch('/api/products');
       const data = await res.json();
       if (res.ok) {
         setProducts(data);
@@ -44,7 +44,7 @@ export default function ProductosPage() {
     loadProducts();
   }, []);
 
-  // Filtrado en tiempo real
+  // Filtrado
   useEffect(() => {
     const filtered = products.filter(product =>
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -63,7 +63,7 @@ export default function ProductosPage() {
           name: productData.name,
           price: productData.price,
           category: productData.category,
-          stock: productData.stock ?? 5, // valor por defecto 5
+          stock: productData.stock ?? 5,
           description: productData.description,
           minQuantity: productData.minQuantity,
           maxQuantity: productData.maxQuantity,
@@ -76,7 +76,6 @@ export default function ProductosPage() {
         throw new Error(data.error || 'Error al guardar');
       }
 
-      // Recargar productos para actualizar la tabla
       await loadProducts();
       setIsModalOpen(false);
       setEditingProduct(null);
@@ -86,19 +85,39 @@ export default function ProductosPage() {
     }
   };
 
-  const handleDelete = async (product: Product) => {
-    if (confirm(`¿Estás seguro de eliminar "${product.name}"?`)) {
-      try {
-        const res = await fetch(`/api/products/${product.id}`, { method: 'DELETE' });
-        if (res.ok) {
-          await loadProducts();
-        } else {
-          alert('Error al eliminar');
-        }
-      } catch (error) {
-        console.error('Error:', error);
+  // Abre el modal de confirmación para eliminar
+  const handleDeleteClick = (product: Product) => {
+    setProductToDelete(product);
+    setIsDeleteModalOpen(true);
+  };
+
+  // Ejecuta la eliminación real
+  const confirmDelete = async () => {
+    if (!productToDelete) return;
+
+    try {
+      const res = await fetch(`/api/products/${productToDelete.id}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        await loadProducts();
+      } else {
+        alert('Error al eliminar');
       }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error al eliminar el producto');
+    } finally {
+      // Cerrar modal y limpiar estado
+      setIsDeleteModalOpen(false);
+      setProductToDelete(null);
     }
+  };
+
+  const cancelDelete = () => {
+    setIsDeleteModalOpen(false);
+    setProductToDelete(null);
   };
 
   const handleEdit = (product: Product) => {
@@ -164,7 +183,7 @@ export default function ProductosPage() {
             <ProductTable
               products={filteredProducts}
               onEdit={handleEdit}
-              onDelete={handleDelete}
+              onDelete={handleDeleteClick} // <-- Usa el nuevo manejador
             />
           </>
         )}
@@ -172,6 +191,7 @@ export default function ProductosPage() {
 
       <Footer />
 
+      {/* Modal de creación/edición */}
       <ProductModal
         isOpen={isModalOpen}
         onClose={() => {
@@ -180,6 +200,14 @@ export default function ProductosPage() {
         }}
         onSave={handleSave}
         product={editingProduct}
+      />
+
+      {/* Modal de confirmación para eliminar */}
+      <DeleteProductModal
+        isOpen={isDeleteModalOpen}
+        productName={productToDelete?.name || ""}
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
       />
     </div>
   );
