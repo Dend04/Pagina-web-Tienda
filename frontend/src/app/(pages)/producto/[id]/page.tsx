@@ -15,10 +15,12 @@ import {
   HeartIcon,
 } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
-import { Product } from "@/app/types/product";
+import { ProductListItem } from "@/app/types/product";
+import { useCartStore } from "../../../store/cartStore";
+
 
 // Datos de ejemplo (después conectarás a Supabase)
-const products: Product[] = [
+const products: ProductListItem[] = [
   {
     id: 1,
     name: "Zapatillas Deportivas",
@@ -53,6 +55,9 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(product?.minQuantity || 1);
   const [isFavorito, setIsFavorito] = useState(false);
   const [loadingFav, setLoadingFav] = useState(false);
+
+  // Obtener función addItem del store
+  const addToCart = useCartStore(state => state.addItem);
 
   useEffect(() => {
     if (!product) return;
@@ -104,10 +109,19 @@ export default function ProductDetailPage() {
       setLoadingFav(false);
     }
   };
+  const addItem = useCartStore(state => state.addItem);
 
   const handleAddToCart = () => {
+  addItem({
+    producto_id: product.id,
+    nombre: product.name,
+    precio_unitario: product.price,
+    cantidad: quantity,
+    imagen: product.image,
+    etiqueta: product.category, // ← importante
+  });
+    // Opcional: mostrar notificación (puedes agregar Sonner después)
     console.log(`Agregado al carrito: ${quantity} x ${product.name}`);
-    // Aquí irá la lógica real del carrito
   };
 
   return (

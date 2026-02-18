@@ -11,6 +11,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useCartStore } from "../store/cartStore";
 
 // Hook personalizado para detectar media query
 function useMediaQuery(query: string): boolean {
@@ -22,8 +23,8 @@ function useMediaQuery(query: string): boolean {
       setMatches(media.matches);
     }
     const listener = () => setMatches(media.matches);
-    window.addEventListener('resize', listener);
-    return () => window.removeEventListener('resize', listener);
+    window.addEventListener("resize", listener);
+    return () => window.removeEventListener("resize", listener);
   }, [matches, query]);
 
   return matches;
@@ -115,7 +116,12 @@ interface LogoutModalProps {
   onGoHome: () => void;
 }
 
-const LogoutModal: React.FC<LogoutModalProps> = ({ isOpen, onClose, onConfirm, onGoHome }) => {
+const LogoutModal: React.FC<LogoutModalProps> = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  onGoHome,
+}) => {
   if (!isOpen) return null;
 
   return (
@@ -170,7 +176,16 @@ export function MainHeader() {
   const [user, setUser] = useState<UserData | null>(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isMobile = useMediaQuery("(max-width: 768px)");
+
+  // Obtener número de items del carrito desde el store
+  const totalItems = useCartStore((state) =>
+    state.carrito.bolsas.reduce(
+      (acc, bolsa) =>
+        acc + bolsa.items.reduce((sum, item) => sum + item.cantidad, 0),
+      0
+    )
+  );
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -188,9 +203,12 @@ export function MainHeader() {
     }
   }, []);
 
+  const logoutCart = useCartStore((state) => state.logout);
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    logoutCart(); // <-- Limpia el carrito
     setUser(null);
     setShowLogoutModal(false);
     router.push("/");
@@ -221,9 +239,11 @@ export function MainHeader() {
                 className="group relative p-2 text-gray-600 hover:text-pucara-primary transition-colors"
               >
                 <ShoppingCartIcon className="w-6 h-6" />
-                <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-pucara-white bg-pucara-primary rounded-full min-w-5 h-5">
-                  3
-                </span>
+                {totalItems > 0 && (
+                  <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-pucara-white bg-pucara-primary rounded-full min-w-5 h-5">
+                    {totalItems}
+                  </span>
+                )}
                 <span className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-2 py-1 text-xs font-medium text-white bg-gray-800 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
                   Ver carrito
                 </span>

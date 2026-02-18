@@ -3,10 +3,11 @@
 import { MainHeader } from "@/app/components/HeadersComponents";
 import { ProductCarousel } from "@/app/components/ProductCarousel";
 import { Footer } from "@/app/components/Footer";
-import { Product } from "@/app/types/product";
+import { ProductListItem } from "./types/product";
+
 
 // Datos de ejemplo (después vendrán de una API o base de datos)
-const featuredProducts: Product[] = [
+const featuredProducts: ProductListItem[] = [
   {
     id: 1,
     name: "Zapatillas Deportivas",
@@ -49,7 +50,7 @@ const featuredProducts: Product[] = [
   },
 ];
 
-const offerProducts: Product[] = [
+const offerProducts: ProductListItem[] = [
   {
     id: 6,
     name: "Smart TV 50\"",

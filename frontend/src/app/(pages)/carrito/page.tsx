@@ -1,168 +1,204 @@
+// app/carrito/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { MainHeader } from "@/app/components/HeadersComponents";
 import { Footer } from "@/app/components/Footer";
 import { WhatsAppButton } from "@/app/components/WhatsAppButton";
-import { ShoppingCartIcon, MinusIcon, PlusIcon } from "@heroicons/react/24/outline";
-
-interface CartItem {
-  id: number;
-  name: string;
-  image: string;
-  price: number;
-  quantity: number;
-}
+import { TrashIcon, MinusIcon, PlusIcon, ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
+import { useCartStore } from "../../store/cartStore";
 
 export default function CartPage() {
-  const [cartItems, setCartItems] = useState<CartItem[]>([
-    {
-      id: 1,
-      name: "Zapatillas Deportivas",
-      image:
-        "https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-      price: 89.99,
-      quantity: 1,
-    },
-    {
-      id: 2,
-      name: "Reloj Inteligente",
-      image:
-        "https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
-      price: 199.99,
-      quantity: 1,
-    },
-  ]);
+  const { carrito, removeItem, updateItemQuantity, removeBolsa } = useCartStore();
+  const [expandedBags, setExpandedBags] = useState<Set<string>>(new Set());
 
-  const calculateTotal = () =>
-    cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+  // Inicializar: expandir la última bolsa (si existe)
+  useEffect(() => {
+    if (carrito.bolsas.length > 0) {
+      const lastBag = carrito.bolsas[carrito.bolsas.length - 1];
+      setExpandedBags(new Set([lastBag.etiqueta]));
+    } else {
+      setExpandedBags(new Set());
+    }
+  }, [carrito.bolsas]); // Se actualiza si cambian las bolsas
 
-  const updateQuantity = (id: number, newQuantity: number) => {
-    setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === id ? { ...item, quantity: Math.max(1, newQuantity) } : item
-      )
-    );
+  const toggleBag = (etiqueta: string) => {
+    setExpandedBags(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(etiqueta)) {
+        newSet.delete(etiqueta);
+      } else {
+        newSet.add(etiqueta);
+      }
+      return newSet;
+    });
   };
+
+  if (carrito.bolsas.length === 0) {
+    return (
+      <div className="min-h-screen bg-pucara-white flex flex-col">
+        <MainHeader />
+        <main className="flex-1 mx-auto w-full max-w-4xl px-4 py-12 text-center">
+          <p className="text-gray-500">Tu carrito está vacío</p>
+          <Link href="/" className="text-pucara-primary hover:underline">
+            Explorar productos
+          </Link>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Preparar items para WhatsAppButton (aplanar todos los items de todas las bolsas)
+  const allItems = carrito.bolsas.flatMap(bolsa =>
+    bolsa.items.map(item => ({
+      name: item.nombre,
+      quantity: item.cantidad,
+      price: item.precio_unitario,
+      category: bolsa.etiqueta, // opcional
+    }))
+  );
 
   return (
     <div className="min-h-screen bg-pucara-white flex flex-col">
       <MainHeader />
+      <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-12">
+        <h1 className="text-3xl font-bold mb-8">Tu Carrito</h1>
 
-      <main className="flex-1 mx-auto w-full max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
-        {/* Título */}
-        <div className="flex items-center gap-3 mb-8">
-          <ShoppingCartIcon className="h-8 w-8 text-pucara-primary" />
-          <h1 className="text-3xl font-bold text-pucara-black">Tu Carrito</h1>
-        </div>
+        <div className="space-y-4">
+          {carrito.bolsas.map((bolsa, index) => {
+            const isExpanded = expandedBags.has(bolsa.etiqueta);
+            const isLast = index === carrito.bolsas.length - 1;
 
-        {cartItems.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-            <p className="text-gray-500 mb-4">Tu carrito está vacío</p>
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 text-pucara-primary hover:text-pucara-accent font-medium transition-colors"
-            >
-              Explorar productos →
-            </Link>
-          </div>
-        ) : (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-8">
-            {/* Lista de productos */}
-            <div className="space-y-6 divide-y divide-gray-100">
-              {cartItems.map((item) => (
+            return (
+              <div
+                key={bolsa.etiqueta}
+                className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden transition-all"
+              >
+                {/* Encabezado de la bolsa - clickeable para expandir/colapsar */}
                 <div
-                  key={item.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between pt-6 first:pt-0"
+                  className="flex justify-between items-center p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => toggleBag(bolsa.etiqueta)}
                 >
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-xl font-semibold text-pucara-primary">
+                      {bolsa.etiqueta}
+                    </h2>
+                    <span className="text-sm text-gray-500">
+                      ({bolsa.items.length} {bolsa.items.length === 1 ? 'producto' : 'productos'})
+                    </span>
+                  </div>
                   <div className="flex items-center gap-4">
-                    {/* Imagen */}
-                    <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-gray-100">
-                      <Image
-                        src={item.image}
-                        alt={item.name}
-                        fill
-                        sizes="80px"
-                        className="object-cover object-center"
-                      />
-                    </div>
-                    {/* Info */}
-                    <div className="flex flex-col">
-                      <h3 className="text-lg font-medium text-pucara-black">
-                        {item.name}
-                      </h3>
-                      <p className="text-pucara-primary font-semibold mt-1">
-                        ${item.price.toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between sm:justify-end gap-4 mt-4 sm:mt-0">
-                    {/* Selector de cantidad (estilo Pucara) */}
-                    <div className="flex items-center border border-gray-200 rounded-full bg-white overflow-hidden shadow-sm">
-                      <button
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        disabled={item.quantity <= 1}
-                        className="px-3 py-2 text-gray-600 hover:bg-pucara-primary/10 hover:text-pucara-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                        aria-label="Disminuir cantidad"
-                      >
-                        <MinusIcon className="w-4 h-4" />
-                      </button>
-                      <span className="w-12 text-center font-medium text-pucara-black">
-                        {item.quantity}
-                      </span>
-                      <button
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="px-3 py-2 text-gray-600 hover:bg-pucara-primary/10 hover:text-pucara-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                        aria-label="Aumentar cantidad"
-                      >
-                        <PlusIcon className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    {/* Subtotal */}
-                    <p className="text-lg font-semibold text-pucara-black min-w-20 text-right">
-                      ${(item.price * item.quantity).toFixed(2)}
-                    </p>
+                    <span className="font-semibold">
+                      Total: <span className="text-pucara-primary">${bolsa.total.toFixed(2)}</span>
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeBolsa(bolsa.etiqueta);
+                      }}
+                      className="text-red-500 hover:text-red-700 transition-colors p-1"
+                      title="Eliminar bolsa"
+                    >
+                      <TrashIcon className="w-5 h-5" />
+                    </button>
+                    {isExpanded ? (
+                      <ChevronUpIcon className="w-5 h-5 text-gray-500" />
+                    ) : (
+                      <ChevronDownIcon className="w-5 h-5 text-gray-500" />
+                    )}
                   </div>
                 </div>
-              ))}
-            </div>
 
-            {/* Resumen y acciones */}
-            <div className="mt-8 pt-6 border-t border-gray-200">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div className="text-xl font-semibold text-pucara-black">
-                  Total:{" "}
-                  <span className="text-2xl text-pucara-primary">
-                    ${calculateTotal().toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                  <Link
-                    href="/"
-                    className="inline-flex items-center justify-center px-6 py-3 border border-pucara-primary text-pucara-primary rounded-full hover:bg-pucara-primary/10 transition-colors font-medium text-center"
-                  >
-                    Seguir comprando
-                  </Link>
-                  <WhatsAppButton
-                    items={cartItems.map(({ name, quantity, price }) => ({
-                      name,
-                      quantity,
-                      price,
-                    }))}
-                    total={calculateTotal()}
-                    className="inline-flex items-center justify-center px-6 py-3 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors font-medium"
-                  />
+                {/* Contenido de la bolsa - con animación de altura */}
+                <div
+                  className={`transition-all duration-300 ease-in-out ${
+                    isExpanded ? 'max-h-250 opacity-100' : 'max-h-0 opacity-0 overflow-hidden'
+                  }`}
+                >
+                  <div className="p-6 pt-0 border-t border-gray-100">
+                    {bolsa.items.map((item) => (
+                      <div
+                        key={item.producto_id}
+                        className="flex flex-col sm:flex-row sm:items-center gap-4 py-4 border-b border-gray-100 last:border-0"
+                      >
+                        {/* Imagen */}
+                        <div className="relative h-16 w-16 shrink-0 rounded-lg overflow-hidden bg-gray-100">
+                          <Image
+                            src={item.imagen || '/placeholder.jpg'}
+                            alt={item.nombre}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        {/* Info */}
+                        <div className="flex-1">
+                          <h3 className="font-medium text-pucara-black">{item.nombre}</h3>
+                          <p className="text-pucara-primary font-semibold">${item.precio_unitario.toFixed(2)} c/u</p>
+                        </div>
+                        {/* Cantidad */}
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => updateItemQuantity(bolsa.etiqueta, item.producto_id, item.cantidad - 1)}
+                            disabled={item.cantidad <= 1}
+                            className="p-1 text-gray-500 hover:text-pucara-primary disabled:opacity-40 border rounded-full"
+                          >
+                            <MinusIcon className="w-4 h-4" />
+                          </button>
+                          <span className="w-8 text-center font-medium">{item.cantidad}</span>
+                          <button
+                            onClick={() => updateItemQuantity(bolsa.etiqueta, item.producto_id, item.cantidad + 1)}
+                            className="p-1 text-gray-500 hover:text-pucara-primary border rounded-full"
+                          >
+                            <PlusIcon className="w-4 h-4" />
+                          </button>
+                        </div>
+                        {/* Subtotal */}
+                        <div className="text-right font-semibold min-w-20">
+                          <span className="text-sm text-gray-500">Subtotal: </span>
+                          <span className="text-pucara-primary">${item.subtotal.toFixed(2)}</span>
+                        </div>
+                        {/* Eliminar item */}
+                        <button
+                          onClick={() => removeItem(bolsa.etiqueta, item.producto_id)}
+                          className="text-gray-400 hover:text-red-500 transition-colors"
+                          title="Eliminar producto"
+                        >
+                          <TrashIcon className="w-5 h-5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
+            );
+          })}
+        </div>
+
+        {/* Resumen general */}
+        <div className="mt-8 p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="text-2xl font-bold">
+              Total general: <span className="text-pucara-primary">${carrito.total_general.toFixed(2)}</span>
+            </div>
+            <div className="flex gap-3">
+              <Link
+                href="/"
+                className="px-6 py-3 border border-pucara-primary text-pucara-primary rounded-full hover:bg-pucara-primary/10 transition-colors font-medium"
+              >
+                Seguir comprando
+              </Link>
+              <WhatsAppButton
+                items={allItems}
+                total={carrito.total_general}
+                className="inline-flex items-center justify-center px-6 py-3 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors font-medium"
+              />
             </div>
           </div>
-        )}
+        </div>
       </main>
-
       <Footer />
     </div>
   );

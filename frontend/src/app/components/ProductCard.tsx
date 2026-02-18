@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ShoppingCartIcon, HeartIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
 import { ProductListItem } from "../types/product";
+import { useCartStore } from "../store/cartStore";
 
 
 interface ProductCardProps {
@@ -18,7 +19,9 @@ export const ProductCard = ({ product }: ProductCardProps) => {
   const [isFavorito, setIsFavorito] = useState(false);
   const [loadingFav, setLoadingFav] = useState(false);
 
-  // Verificar si el producto está en favoritos al montar
+  const addItem = useCartStore(state => state.addItem); // <-- Usamos addItem del store correcto
+
+  // Verificar favoritos
   useEffect(() => {
     const checkFavorito = async () => {
       const token = localStorage.getItem("token");
@@ -87,7 +90,24 @@ export const ProductCard = ({ product }: ProductCardProps) => {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log("Agregar al carrito:", product.name);
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      window.location.href = "/login";
+      return;
+    }
+
+    // Agregar al carrito usando el store corregido
+    addItem({
+      etiqueta: product.category,
+      producto_id: product.id,
+      nombre: product.name,
+      precio_unitario: product.price,
+      cantidad: 1,
+      imagen: product.image,
+    });
+
+    // Opcional: mostrar notificación (puedes agregar un toast)
   };
 
   return (
