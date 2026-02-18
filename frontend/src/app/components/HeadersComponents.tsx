@@ -7,6 +7,7 @@ import {
   ShoppingCartIcon,
   UserCircleIcon,
   XMarkIcon,
+  ClockIcon, // Importamos el icono de reloj para pedidos pendientes
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import Link from "next/link";
@@ -34,6 +35,7 @@ interface NavigationItem {
   name: string;
   icon: ComponentType<SVGProps<SVGSVGElement>>;
   path: string;
+  roles?: string[]; // roles permitidos, si no se especifica, visible para todos
 }
 
 interface HeaderMenuProps {
@@ -44,6 +46,7 @@ interface UserData {
   nombre_usuario?: string;
   correo?: string;
   imagen?: string;
+  rol?: string; // agregamos el rol
 }
 
 export const HeaderMenu: React.FC<HeaderMenuProps> = ({ navigationItems }) => {
@@ -103,9 +106,10 @@ export const AppLogo: React.FC = () => {
   );
 };
 
-export const headerNavigationItems: NavigationItem[] = [
-  { name: "Estadísticas", icon: ChartBarIcon, path: "/estadisticas" },
-  { name: "Productos", icon: CubeIcon, path: "/productos" },
+// Definimos todos los items con roles permitidos
+const allNavigationItems: NavigationItem[] = [
+  { name: "Estadísticas", icon: ChartBarIcon, path: "/estadisticas", roles: ["comercial"] },
+  { name: "Productos", icon: CubeIcon, path: "/productos", roles: ["comercial"] },
 ];
 
 // Modal de confirmación para cerrar sesión
@@ -178,6 +182,9 @@ export function MainHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useMediaQuery("(max-width: 768px)");
 
+  // Estado para el contador de pedidos pendientes
+  const [pendientesCount, setPendientesCount] = useState(0);
+
   // Obtener número de items del carrito desde el store
   const totalItems = useCartStore((state) =>
     state.carrito.bolsas.reduce(
@@ -196,12 +203,37 @@ export function MainHeader() {
           nombre_usuario: parsed.nombre_usuario,
           correo: parsed.correo,
           imagen: parsed.imagen,
+          rol: parsed.rol, // asumimos que viene del backend
         });
       } catch (e) {
         console.error("Error parsing user from localStorage", e);
       }
     }
   }, []);
+
+  // Fetch del contador de pedidos pendientes (solo si el usuario es comercial)
+  useEffect(() => {
+    const fetchPendientesCount = async () => {
+      if (!user || user.rol !== 'comercial') return;
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      try {
+        const res = await fetch('/api/pedidos/pendientes/count', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setPendientesCount(data.count || 0);
+        }
+      } catch (error) {
+        console.error('Error obteniendo conteo de pendientes:', error);
+      }
+    };
+
+    fetchPendientesCount();
+    const interval = setInterval(fetchPendientesCount, 30000); // actualizar cada 30s
+    return () => clearInterval(interval);
+  }, [user]);
 
   const logoutCart = useCartStore((state) => state.logout);
 
@@ -221,6 +253,16 @@ export function MainHeader() {
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
+  // Filtrar items según el rol del usuario
+  const navigationItems = allNavigationItems.filter(item => {
+    // Si el item no especifica roles, es público
+    if (!item.roles) return true;
+    // Si no hay usuario, no mostrar items con roles
+    if (!user) return false;
+    // Si el usuario tiene rol incluido en los permitidos
+    return item.roles.includes(user.rol || '');
+  });
+
   return (
     <>
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
@@ -229,11 +271,30 @@ export function MainHeader() {
             {/* Logo + navegación */}
             <div className="flex items-center">
               <AppLogo />
-              <HeaderMenu navigationItems={headerNavigationItems} />
+              <HeaderMenu navigationItems={navigationItems} />
             </div>
 
-            {/* Carrito y usuario */}
+            {/* Carrito, pedidos pendientes y usuario */}
             <div className="flex items-center space-x-4">
+              {/* Botón de pedidos pendientes (solo comercial) */}
+              {user?.rol === 'comercial' && (
+                <Link
+                  href="/admin/pedidos"
+                  className="group relative p-2 text-gray-600 hover:text-pucara-primary transition-colors"
+                >
+                  <ClockIcon className="w-6 h-6" />
+                  {pendientesCount > 0 && (
+                    <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-pucara-white bg-red-500 rounded-full min-w-5 h-5">
+                      {pendientesCount}
+                    </span>
+                  )}
+                  <span className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-2 py-1 text-xs font-medium text-white bg-gray-800 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+                    Pedidos pendientes
+                  </span>
+                </Link>
+              )}
+
+              {/* Carrito */}
               <Link
                 href="/carrito"
                 className="group relative p-2 text-gray-600 hover:text-pucara-primary transition-colors"

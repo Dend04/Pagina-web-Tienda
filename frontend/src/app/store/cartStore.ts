@@ -141,9 +141,7 @@ export const useCartStore = create<CartStore>()(
         set({ carrito: { ...carrito } });
       },
 
-      clearCart: () => {
-        set({ carrito: { usuario_id: getUserIdFromToken(), bolsas: [], total_general: 0 } });
-      },
+      clearCart: () => set({ carrito: { usuario_id: getUserIdFromToken(), bolsas: [], total_general: 0 } }),
 
       getTotalGeneral: () => get().carrito.total_general,
 

@@ -18,7 +18,6 @@ import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
 import { ProductListItem } from "@/app/types/product";
 import { useCartStore } from "../../../store/cartStore";
 
-
 // Datos de ejemplo (después conectarás a Supabase)
 const products: ProductListItem[] = [
   {
@@ -56,8 +55,8 @@ export default function ProductDetailPage() {
   const [isFavorito, setIsFavorito] = useState(false);
   const [loadingFav, setLoadingFav] = useState(false);
 
-  // Obtener función addItem del store
-  const addToCart = useCartStore(state => state.addItem);
+  // Obtener función addItem del store (una sola vez)
+  const addItem = useCartStore(state => state.addItem);
 
   useEffect(() => {
     if (!product) return;
@@ -109,17 +108,24 @@ export default function ProductDetailPage() {
       setLoadingFav(false);
     }
   };
-  const addItem = useCartStore(state => state.addItem);
 
   const handleAddToCart = () => {
-  addItem({
-    producto_id: product.id,
-    nombre: product.name,
-    precio_unitario: product.price,
-    cantidad: quantity,
-    imagen: product.image,
-    etiqueta: product.category, // ← importante
-  });
+    // Verificar autenticación
+    const token = localStorage.getItem("token");
+    if (!token) {
+      window.location.href = "/login";
+      return;
+    }
+
+    addItem({
+      producto_id: product.id,
+      nombre: product.name,
+      precio_unitario: product.price,
+      cantidad: quantity,
+      imagen: product.image,
+      etiqueta: product.category, // ← importante para agrupar por categoría
+    });
+
     // Opcional: mostrar notificación (puedes agregar Sonner después)
     console.log(`Agregado al carrito: ${quantity} x ${product.name}`);
   };
