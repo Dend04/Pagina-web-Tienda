@@ -1,12 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { MainHeader } from "@/app/components/HeadersComponents";
 import { ProductCarousel } from "@/app/components/ProductCarousel";
+import { ProductCard } from "@/app/components/ProductCard";
 import { Footer } from "@/app/components/Footer";
 import { ProductListItem } from "./types/product";
 
-
-// Datos de ejemplo (después vendrán de una API o base de datos)
+// Datos de ejemplo para los carruseles (podrían venir también de la API)
 const featuredProducts: ProductListItem[] = [
   {
     id: 1,
@@ -67,10 +68,31 @@ const offerProducts: ProductListItem[] = [
     image:
       "https://images.unsplash.com/photo-1599669454699-248893623440?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80",
   },
-  // Puedes agregar más productos aquí
 ];
 
 export default function Dashboard() {
+  const [allProducts, setAllProducts] = useState<ProductListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch('/api/products');
+        const data = await res.json();
+        if (res.ok) {
+          setAllProducts(data);
+        } else {
+          console.error('Error cargando productos:', data.error);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
+
   return (
     <div className="min-h-screen bg-pucara-white flex flex-col">
       <MainHeader />
@@ -87,7 +109,7 @@ export default function Dashboard() {
             </p>
           </div>
           <span className="mt-3 sm:mt-0 text-sm text-gray-600 bg-white px-5 py-2.5 rounded-full border border-gray-200 shadow-sm">
-            Mostrando {featuredProducts.length + offerProducts.length} de 36 productos
+            Mostrando {allProducts.length} productos
           </span>
         </div>
 
@@ -99,6 +121,26 @@ export default function Dashboard() {
         {/* Carrusel de ofertas */}
         <section className="mb-16">
           <ProductCarousel products={offerProducts} title="Ofertas especiales" />
+        </section>
+
+        {/* Grid de todos los productos */}
+        <section className="mt-16">
+          <h2 className="text-2xl md:text-3xl font-bold text-pucara-black mb-6">
+            Todos los productos
+          </h2>
+          {loading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pucara-primary"></div>
+            </div>
+          ) : allProducts.length === 0 ? (
+            <p className="text-center text-gray-500 py-12">No hay productos disponibles</p>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              {allProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Banner promocional */}

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { XMarkIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
-
 import Image from "next/image";
 import { ProductDetail } from "../types/product";
 
@@ -10,15 +9,15 @@ interface ProductModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (productData: Partial<ProductDetail>, imageUrls: string[]) => Promise<void>;
-  product?: ProductDetail | null; // Puede tener la propiedad 'images'
+  product?: ProductDetail | null;
 }
 
 export default function ProductModal({ isOpen, onClose, onSave, product }: ProductModalProps) {
   const [formData, setFormData] = useState({
     name: "",
-    price: 0,
+    price: undefined as number | undefined,
     category: "",
-    stock: 0,
+    stock: undefined as number | undefined,
     description: "",
   });
   const [loading, setLoading] = useState(false);
@@ -27,34 +26,49 @@ export default function ProductModal({ isOpen, onClose, onSave, product }: Produ
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
 
-  // Cargar datos cuando se abre el modal (nuevo o edición)
+  // Resetear formulario cuando se cierra el modal (para evitar datos residuales)
   useEffect(() => {
-    if (product) {
-      setFormData({
-        name: product.name || "",
-        price: typeof product.price === "number" ? product.price : 0,
-        category: product.category || "",
-        stock: typeof product.stock === "number" ? product.stock : 0,
-        description: product.description || "",
-      });
-      // Cargar imágenes existentes si vienen en el producto
-      setExistingImages(product.images || []);
-      setImageFiles([]);
-      setImagePreviews([]);
-    } else {
-      // Modo nuevo producto
+    if (!isOpen) {
       setFormData({
         name: "",
-        price: 0,
+        price: undefined,
         category: "",
-        stock: 0,
+        stock: undefined,
         description: "",
       });
       setExistingImages([]);
       setImageFiles([]);
       setImagePreviews([]);
     }
-  }, [product]);
+  }, [isOpen]);
+
+  // Cargar datos cuando se abre el modal para editar
+  useEffect(() => {
+    if (product && isOpen) {
+      setFormData({
+        name: product.name || "",
+        price: product.price,
+        category: product.category || "",
+        stock: product.stock,
+        description: product.description || "",
+      });
+      setExistingImages(product.images || []);
+      setImageFiles([]);
+      setImagePreviews([]);
+    } else if (!product && isOpen) {
+      // Aseguramos valores vacíos para nuevo producto
+      setFormData({
+        name: "",
+        price: undefined,
+        category: "",
+        stock: undefined,
+        description: "",
+      });
+      setExistingImages([]);
+      setImageFiles([]);
+      setImagePreviews([]);
+    }
+  }, [product, isOpen]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -84,6 +98,18 @@ export default function ProductModal({ isOpen, onClose, onSave, product }: Produ
     e.preventDefault();
     setLoading(true);
     try {
+      // Validar que precio y stock no sean undefined ni vacíos (opcional)
+      if (formData.price === undefined || formData.price < 0) {
+        alert("El precio debe ser un número válido");
+        setLoading(false);
+        return;
+      }
+      if (formData.stock === undefined || formData.stock < 0) {
+        alert("El stock debe ser un número válido");
+        setLoading(false);
+        return;
+      }
+
       // Subir nuevas imágenes
       const newUploadedUrls: string[] = [];
       if (imageFiles.length > 0) {
@@ -104,12 +130,9 @@ export default function ProductModal({ isOpen, onClose, onSave, product }: Produ
         setUploading(false);
       }
 
-      // Combinar imágenes existentes (que no se eliminaron) con las nuevas
       const allImageUrls = [...existingImages, ...newUploadedUrls];
-
-      // Llamar a la función onSave del padre
       await onSave(formData, allImageUrls);
-      onClose();
+      onClose(); // Cierra el modal
     } catch (error) {
       console.error("Error saving product:", error);
     } finally {
@@ -155,8 +178,11 @@ export default function ProductModal({ isOpen, onClose, onSave, product }: Produ
                 required
                 min="0"
                 step="0.01"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                value={formData.price ?? ""}
+                onChange={(e) => {
+                  const val = e.target.value === "" ? undefined : parseFloat(e.target.value);
+                  setFormData({ ...formData, price: val });
+                }}
                 className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pucara-primary/50 focus:border-pucara-primary outline-none"
                 placeholder="0.00"
               />
@@ -180,8 +206,11 @@ export default function ProductModal({ isOpen, onClose, onSave, product }: Produ
                 type="number"
                 required
                 min="0"
-                value={formData.stock}
-                onChange={(e) => setFormData({ ...formData, stock: parseInt(e.target.value) || 0 })}
+                value={formData.stock ?? ""}
+                onChange={(e) => {
+                  const val = e.target.value === "" ? undefined : parseInt(e.target.value, 10);
+                  setFormData({ ...formData, stock: val });
+                }}
                 className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pucara-primary/50 focus:border-pucara-primary outline-none"
                 placeholder="0"
               />
