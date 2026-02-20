@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { MainHeader } from "@/app/components/HeadersComponents";
+
 import { Footer } from "@/app/components/Footer";
 import { 
   PencilIcon, 
@@ -14,6 +14,7 @@ import {
   UserIcon,
   BriefcaseIcon
 } from "@heroicons/react/24/outline";
+import { MainHeader } from "@/app/components/header";
 
 interface UserData {
   id: number;

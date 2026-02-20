@@ -4,39 +4,28 @@ import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 
-export async function POST(request: Request) {
-  try {
-    const { items, total } = await request.json();
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    }
+export async function GET(request: Request) {
+  const authHeader = request.headers.get('authorization');
+  if (!authHeader) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
 
-    const token = authHeader.split(' ')[1];
-    let usuarioId: number;
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET) as any;
-      usuarioId = decoded.id;
-    } catch {
-      return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    if (decoded.rol !== 'comercial') {
+      return NextResponse.json({ error: 'Acceso denegado' }, { status: 403 });
     }
 
     const { data, error } = await supabaseAdmin
       .from('historial_compras')
-      .insert({
-        usuario_id: usuarioId,
-        items,
-        total,
-        estado: 'pendiente',
-      })
-      .select()
-      .single();
+      .select('*, usuarios(nombre_usuario, correo)')
+      .order('fecha', { ascending: false });
 
     if (error) throw error;
-
-    return NextResponse.json({ success: true, pedido: data });
+    return NextResponse.json(data);
   } catch (error) {
-    console.error('Error guardando historial:', error);
+    console.error('Error en admin/historial:', error);
     return NextResponse.json({ error: 'Error interno' }, { status: 500 });
   }
 }

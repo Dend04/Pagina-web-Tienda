@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MainHeader } from "@/app/components/HeadersComponents";
+
 import { Footer } from "@/app/components/Footer";
 import SearchBar from "@/app/components/SearchBar";
 import ProductTable from "@/app/components/ProductTable";
@@ -9,32 +9,39 @@ import ProductModal from "@/app/components/ProductModal";
 import DeleteProductModal from "@/app/components/DeleteProductModal";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import { ProductListItem, ProductDetail } from "@/app/types/product";
+import { MainHeader } from "@/app/components/header";
 
 export default function ProductosPage() {
   const [products, setProducts] = useState<ProductListItem[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<ProductListItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<ProductDetail | null>(null); // Cambiado a ProductDetail
+  const [editingProduct, setEditingProduct] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Estados para el modal de eliminar
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<ProductListItem | null>(null);
 
-  // Cargar productos (lista resumida)
+  // Cargar productos (lista resumida) usando la API paginada
   const loadProducts = async () => {
+    setLoading(true);
     try {
-      const res = await fetch('/api/products');
+      // Usamos un límite alto (ej. 100) para cargar todos los productos en admin
+      const res = await fetch('/api/products?page=1&limit=100');
       const data = await res.json();
-      if (res.ok) {
-        setProducts(data);
-        setFilteredProducts(data);
+      if (res.ok && data.products) {
+        setProducts(data.products);
+        setFilteredProducts(data.products);
       } else {
         console.error('Error cargando productos:', data.error);
+        setProducts([]);
+        setFilteredProducts([]);
       }
     } catch (error) {
       console.error('Error:', error);
+      setProducts([]);
+      setFilteredProducts([]);
     } finally {
       setLoading(false);
     }
@@ -128,7 +135,7 @@ export default function ProductosPage() {
       const res = await fetch(`/api/products/${product.id}`);
       if (res.ok) {
         const fullProduct = await res.json();
-        setEditingProduct(fullProduct); // fullProduct es de tipo ProductDetail
+        setEditingProduct(fullProduct);
         setIsModalOpen(true);
       } else {
         console.error('Error al cargar el producto completo');
@@ -147,8 +154,8 @@ export default function ProductosPage() {
     return (
       <div className="min-h-screen bg-pucara-white flex flex-col">
         <MainHeader />
-        <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          <p className="text-center text-gray-500">Cargando productos...</p>
+        <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 flex justify-center items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pucara-primary"></div>
         </main>
         <Footer />
       </div>
@@ -204,7 +211,6 @@ export default function ProductosPage() {
 
       <Footer />
 
-      {/* Modal de creación/edición */}
       <ProductModal
         isOpen={isModalOpen}
         onClose={() => {
@@ -215,7 +221,6 @@ export default function ProductosPage() {
         product={editingProduct}
       />
 
-      {/* Modal de confirmación para eliminar */}
       <DeleteProductModal
         isOpen={isDeleteModalOpen}
         productName={productToDelete?.name || ""}

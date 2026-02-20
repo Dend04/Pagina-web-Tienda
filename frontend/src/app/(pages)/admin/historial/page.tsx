@@ -1,33 +1,59 @@
-// app/admin/historial/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabaseAdmin } from "@/lib/supabaseAdmin";
 import { HistorialPedido } from "@/app/types/historial";
-
 
 export default function HistorialAdmin() {
   const [pedidos, setPedidos] = useState<HistorialPedido[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     cargarPedidos();
   }, []);
 
   const cargarPedidos = async () => {
-    const { data } = await supabaseAdmin
-      .from('historial_compras')
-      .select('*, usuarios(nombre_usuario, correo)')
-      .order('fecha', { ascending: false });
-    setPedidos(data || []);
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("No autenticado");
+
+      const res = await fetch("/api/admin/historial", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Error al cargar");
+      setPedidos(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const cambiarEstado = async (id: number, nuevoEstado: HistorialPedido['estado']) => {
-    await supabaseAdmin
-      .from('historial_compras')
-      .update({ estado: nuevoEstado })
-      .eq('id', id);
-    cargarPedidos();
+  const cambiarEstado = async (id: number, nuevoEstado: string) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`/api/admin/historial/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ estado: nuevoEstado }),
+      });
+      if (res.ok) {
+        cargarPedidos();
+      } else {
+        alert("Error al actualizar");
+      }
+    } catch (error) {
+      console.error(error);
+    }
   };
+
+  if (loading) return <div className="p-4">Cargando...</div>;
+  if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
 
   return (
     <div className="p-4">

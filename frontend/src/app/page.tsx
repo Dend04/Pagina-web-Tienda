@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { MainHeader } from "@/app/components/HeadersComponents";
+import { useEffect, useState, useRef, useCallback } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInView } from "react-intersection-observer";
+
 import { ProductCarousel } from "@/app/components/ProductCarousel";
 import { ProductCard } from "@/app/components/ProductCard";
 import { Footer } from "@/app/components/Footer";
 import { ProductListItem } from "./types/product";
+import { MainHeader } from "./components/header";
 
 // Datos de ejemplo para los carruseles (podrían venir también de la API)
 const featuredProducts: ProductListItem[] = [
@@ -70,28 +73,46 @@ const offerProducts: ProductListItem[] = [
   },
 ];
 
-export default function Dashboard() {
-  const [allProducts, setAllProducts] = useState<ProductListItem[]>([]);
-  const [loading, setLoading] = useState(true);
+// Función para obtener productos (usada por React Query)
+const fetchProducts = async ({ pageParam = 1 }) => {
+  const res = await fetch(`/api/products?page=${pageParam}&limit=12`);
+  if (!res.ok) {
+    throw new Error('Error al cargar productos');
+  }
+  return res.json();
+};
 
+export default function Dashboard() {
+  const {
+    data,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    status,
+  } = useInfiniteQuery({
+    queryKey: ['products'],
+    queryFn: fetchProducts,
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      // Suponiendo que la API devuelve un objeto con { products, nextPage } o similar
+      // Ajusta según la estructura de tu API
+      return lastPage.nextPage ?? undefined;
+    },
+  });
+
+  // Referencia para el último elemento (intersection observer)
+  const { ref, inView } = useInView();
+
+  // Cargar más productos cuando el último elemento entra en vista
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const res = await fetch('/api/products');
-        const data = await res.json();
-        if (res.ok) {
-          setAllProducts(data);
-        } else {
-          console.error('Error cargando productos:', data.error);
-        }
-      } catch (error) {
-        console.error('Error:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProducts();
-  }, []);
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Aplanar los productos de todas las páginas
+  const allProducts = data?.pages.flatMap(page => page.products) ?? [];
 
   return (
     <div className="min-h-screen bg-pucara-white flex flex-col">
@@ -128,18 +149,42 @@ export default function Dashboard() {
           <h2 className="text-2xl md:text-3xl font-bold text-pucara-black mb-6">
             Todos los productos
           </h2>
-          {loading ? (
+
+          {status === 'pending' ? (
             <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pucara-primary"></div>
             </div>
+          ) : status === 'error' ? (
+            <p className="text-center text-red-500 py-12">Error: {error.message}</p>
           ) : allProducts.length === 0 ? (
             <p className="text-center text-gray-500 py-12">No hay productos disponibles</p>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-              {allProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                {allProducts.map((product, index) => {
+                  // Agregar ref al último producto para observar
+                  if (index === allProducts.length - 1) {
+                    return (
+                      <div ref={ref} key={product.id}>
+                        <ProductCard product={product} />
+                      </div>
+                    );
+                  } else {
+                    return <ProductCard key={product.id} product={product} />;
+                  }
+                })}
+              </div>
+
+              {isFetchingNextPage && (
+                <div className="flex justify-center items-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pucara-primary"></div>
+                </div>
+              )}
+
+              {!hasNextPage && allProducts.length > 0 && (
+                <p className="text-center text-gray-500 py-8">No hay más productos</p>
+              )}
+            </>
           )}
         </section>
 

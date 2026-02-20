@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ShoppingCartIcon, HeartIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
 import { ProductListItem } from "../types/product";
 import { useCartStore } from "../store/cartStore";
-
+import { useFavoritosStore } from "../store/favoritosStore";
 
 interface ProductCardProps {
   product: ProductListItem;
@@ -16,33 +16,13 @@ interface ProductCardProps {
 export const ProductCard = ({ product }: ProductCardProps) => {
   const [rotate, setRotate] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
-  const [isFavorito, setIsFavorito] = useState(false);
   const [loadingFav, setLoadingFav] = useState(false);
 
-  const addItem = useCartStore(state => state.addItem); // <-- Usamos addItem del store correcto
+  const addItem = useCartStore((state) => state.addItem);
+  const { favoritos, toggleFavorito } = useFavoritosStore();
+  const isFavorito = favoritos.includes(product.id);
 
-  // Verificar favoritos
-  useEffect(() => {
-    const checkFavorito = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-      try {
-        const res = await fetch("/api/favoritos", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        if (res.ok && data.favoritos) {
-          setIsFavorito(data.favoritos.includes(product.id));
-        }
-      } catch (error) {
-        console.error("Error al verificar favoritos", error);
-      }
-    };
-    checkFavorito();
-  }, [product.id]);
-
-  const toggleFavorito = async (e: React.MouseEvent) => {
+  const handleToggleFavorito = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -64,7 +44,9 @@ export const ProductCard = ({ product }: ProductCardProps) => {
       });
       const data = await res.json();
       if (res.ok) {
-        setIsFavorito(data.favorito);
+        toggleFavorito(product.id); // Actualiza el store local
+      } else {
+        console.error("Error al cambiar favorito", data.error);
       }
     } catch (error) {
       console.error("Error al cambiar favorito", error);
@@ -97,7 +79,6 @@ export const ProductCard = ({ product }: ProductCardProps) => {
       return;
     }
 
-    // Agregar al carrito usando el store corregido
     addItem({
       etiqueta: product.category,
       producto_id: product.id,
@@ -106,8 +87,6 @@ export const ProductCard = ({ product }: ProductCardProps) => {
       cantidad: 1,
       imagen: product.image,
     });
-
-    // Opcional: mostrar notificación (puedes agregar un toast)
   };
 
   return (
@@ -124,7 +103,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
         {/* Imagen con corazón */}
         <div className="relative h-40 sm:h-64 w-full bg-gray-100/30 overflow-hidden">
           <button
-            onClick={toggleFavorito}
+            onClick={handleToggleFavorito}
             disabled={loadingFav}
             className="absolute top-2 right-2 z-20 p-1.5 bg-white/80 backdrop-blur-sm rounded-full shadow-md hover:bg-white transition-colors disabled:opacity-50"
             aria-label={isFavorito ? "Quitar de favoritos" : "Agregar a favoritos"}

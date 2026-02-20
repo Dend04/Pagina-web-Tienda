@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { MainHeader } from "@/app/components/HeadersComponents";
+
 import { Footer } from "@/app/components/Footer";
 import { RatingStars } from "@/app/components/RatingStars";
 import { QuantitySelector } from "@/app/components/QuantitySelector";
@@ -17,6 +17,7 @@ import {
 import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
 import { ProductListItem } from "@/app/types/product";
 import { useCartStore } from "../../../store/cartStore";
+import { MainHeader } from "@/app/components/header";
 
 // Datos de ejemplo (después conectarás a Supabase)
 const products: ProductListItem[] = [

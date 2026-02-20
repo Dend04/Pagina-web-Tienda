@@ -1,13 +1,21 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    // 1. Obtener todos los productos
-    const { data: productos, error } = await supabaseAdmin
+    // Obtener parámetros de paginación
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '12')
+    const from = (page - 1) * limit
+    const to = from + limit - 1
+
+    // 1. Obtener productos paginados con conteo total
+    const { data: productos, error, count } = await supabaseAdmin
       .from('productos')
-      .select('*')
+      .select('*', { count: 'exact' })
       .order('id', { ascending: false })
+      .range(from, to)
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
@@ -35,7 +43,16 @@ export async function GET() {
       })
     )
 
-    return NextResponse.json(productosConImagen)
+    // 3. Calcular paginación
+    const total = count || 0
+    const totalPages = Math.ceil(total / limit)
+    const nextPage = page < totalPages ? page + 1 : null
+
+    return NextResponse.json({
+      products: productosConImagen,
+      nextPage,
+      total,
+    })
   } catch (error) {
     console.error('Error en GET:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

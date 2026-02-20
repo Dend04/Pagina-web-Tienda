@@ -4,11 +4,12 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { MainHeader } from "@/app/components/HeadersComponents";
+
 import { Footer } from "@/app/components/Footer";
 import { WhatsAppButton } from "@/app/components/WhatsAppButton";
 import { TrashIcon, MinusIcon, PlusIcon, ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 import { useCartStore } from "../../store/cartStore";
+import { MainHeader } from "@/app/components/header";
 
 export default function CartPage() {
   const { carrito, removeItem, updateItemQuantity, removeBolsa } = useCartStore();
