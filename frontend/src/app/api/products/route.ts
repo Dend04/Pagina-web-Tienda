@@ -3,33 +3,33 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin'
 
 export async function GET(request: Request) {
   try {
-    // Obtener parámetros de paginación
-    const { searchParams } = new URL(request.url)
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '12')
-    const from = (page - 1) * limit
-    const to = from + limit - 1
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '12');
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
 
-    // 1. Obtener productos paginados con conteo total
     const { data: productos, error, count } = await supabaseAdmin
       .from('productos')
       .select('*', { count: 'exact' })
       .order('id', { ascending: false })
-      .range(from, to)
+      .range(from, to);
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // 2. Para cada producto, obtener su primera imagen
+    // Asegurar que productos sea un array (aunque esté vacío)
+    const productosArray = productos || [];
+
     const productosConImagen = await Promise.all(
-      productos.map(async (producto: any) => {
+      productosArray.map(async (producto: any) => {
         const { data: imagenes } = await supabaseAdmin
           .from('producto_imagenes')
           .select('url')
           .eq('producto_id', producto.id)
           .order('orden', { ascending: true })
-          .limit(1)
+          .limit(1);
 
         return {
           id: producto.id,
@@ -39,23 +39,22 @@ export async function GET(request: Request) {
           stock: producto.stock,
           description: producto.descripcion,
           image: imagenes && imagenes.length > 0 ? imagenes[0].url : null,
-        }
+        };
       })
-    )
+    );
 
-    // 3. Calcular paginación
-    const total = count || 0
-    const totalPages = Math.ceil(total / limit)
-    const nextPage = page < totalPages ? page + 1 : null
+    const total = count || 0;
+    const totalPages = Math.ceil(total / limit);
+    const nextPage = page < totalPages ? page + 1 : null;
 
     return NextResponse.json({
       products: productosConImagen,
       nextPage,
       total,
-    })
+    });
   } catch (error) {
-    console.error('Error en GET:', error)
-    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+    console.error('Error en GET /api/products:', error);
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 });
   }
 }
 
