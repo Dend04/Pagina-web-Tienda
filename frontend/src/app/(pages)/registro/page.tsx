@@ -6,16 +6,16 @@ import Paso0Rol from "@/app/components/registro/Paso0Rol";
 import Paso1Nombre from "@/app/components/registro/Paso1Nombre";
 import Paso2Email from "@/app/components/registro/Paso2Email";
 import Paso3Password from "@/app/components/registro/Paso3Password";
-import Paso4TelefonoDireccion from "@/app/components/registro/Paso4TelefonoDireccion";
+import Paso4DatosContacto from "@/app/components/registro/Paso4DatosContacto";
 import Paso5Foto from "@/app/components/registro/Paso5Foto";
 
-// Nombres descriptivos de cada paso (ahora 6 pasos)
+// Nombres descriptivos de cada paso (ajustados)
 const stepNames = [
   "Tipo de cuenta",
   "Nombre de usuario",
   "Correo electrónico",
   "Contraseña",
-  "Teléfono y dirección",
+  "Datos de contacto y negocio",
   "Foto de perfil",
 ];
 
@@ -30,7 +30,12 @@ export default function RegistroPage() {
     password: "",
     telefono: "",
     direccion: "",
+    nit: "",
+    nombreNegocio: "",
+    provincia: "",
+    municipio: "",
     foto: null as File | null,
+    documento: null as File | null,
   });
 
   const actualizarDatos = (nuevosDatos: Partial<typeof formData>) => {
@@ -51,8 +56,7 @@ export default function RegistroPage() {
     }
   };
 
-  const handleSubmit = async (imagenUrl?: string) => {
-    console.log("Enviando imagenUrl:", imagenUrl);
+  const handleSubmit = async (imagenUrl?: string, documentoUrl?: string) => {
     const response = await fetch("/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -64,6 +68,11 @@ export default function RegistroPage() {
         telefono: formData.telefono || null,
         direccion: formData.direccion || null,
         imagen: imagenUrl || null,
+        nit: formData.nit || null,
+        nombre_negocio: formData.nombreNegocio || null,
+        provincia: formData.provincia || null,
+        municipio: formData.municipio || null,
+        documento_url: documentoUrl || null,
       }),
     });
 
@@ -80,8 +89,18 @@ export default function RegistroPage() {
       return (
         <div className="text-center space-y-6 py-8">
           <div className="inline-flex p-4 rounded-full bg-green-100 text-green-600">
-            <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            <svg
+              className="w-12 h-12"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 13l4 4L19 7"
+              />
             </svg>
           </div>
           <h2 className="text-2xl md:text-3xl font-light text-pucara-black">
@@ -137,10 +156,17 @@ export default function RegistroPage() {
         );
       case 5:
         return (
-          <Paso4TelefonoDireccion
+          <Paso4DatosContacto
             telefono={formData.telefono}
             direccion={formData.direccion}
+            nit={formData.nit}
+            nombreNegocio={formData.nombreNegocio}
+            provincia={formData.provincia}
+            municipio={formData.municipio}
+            rol={formData.rol}
+            documento={formData.documento}
             onChange={(campo, val) => actualizarDatos({ [campo]: val })}
+            onDocumentoChange={(file) => actualizarDatos({ documento: file })}
             onAnterior={pasoAnterior}
             onSiguiente={pasoSiguiente}
           />
@@ -173,17 +199,21 @@ export default function RegistroPage() {
                   const stepName = stepNames[num - 1];
 
                   return (
-                    <div key={num} className="flex flex-col items-center flex-1">
+                    <div
+                      key={num}
+                      className="flex flex-col items-center flex-1"
+                    >
                       <button
                         onClick={() => isClickable && irAPaso(num)}
                         disabled={!isClickable}
                         className={`
                           w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all
-                          ${isActive
-                            ? "bg-pucara-primary text-pucara-white ring-4 ring-pucara-primary/20"
-                            : isCompleted
-                            ? "bg-pucara-primary/20 text-pucara-primary hover:bg-pucara-primary/30 cursor-pointer"
-                            : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                          ${
+                            isActive
+                              ? "bg-pucara-primary text-pucara-white ring-4 ring-pucara-primary/20"
+                              : isCompleted
+                                ? "bg-pucara-primary/20 text-pucara-primary hover:bg-pucara-primary/30 cursor-pointer"
+                                : "bg-gray-200 text-gray-500 cursor-not-allowed"
                           }
                           ${isClickable ? "hover:scale-105" : ""}
                         `}
@@ -196,7 +226,9 @@ export default function RegistroPage() {
                         </span>
                       )}
                       {isCompleted && !isActive && (
-                        <span className="text-xs mt-2 text-pucara-primary/60">✓</span>
+                        <span className="text-xs mt-2 text-pucara-primary/60">
+                          ✓
+                        </span>
                       )}
                     </div>
                   );
