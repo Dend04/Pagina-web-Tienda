@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { supabaseAdmin } from '@/lib/supabaseAdmin'
+import { checkRateLimit, getClientIp, RATE_LIMITS } from '@/lib/rateLimit'
 
 // Validación de la variable de entorno JWT_SECRET
 const JWT_SECRET = process.env.JWT_SECRET
@@ -10,8 +11,37 @@ if (!JWT_SECRET) {
 }
 const jwtSecret: string = JWT_SECRET
 
+// Cookie configuration
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax' as const,
+  path: '/',
+  maxAge: 60 * 60 * 24 * 7, // 7 days
+};
+
 export async function POST(request: Request) {
   try {
+    // Rate limiting check
+    const clientIp = getClientIp(request.headers);
+    const rateLimitResult = checkRateLimit(clientIp, RATE_LIMITS.LOGIN);
+    
+    if (rateLimitResult.isLimited) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Demasiados intentos. Intenta de nuevo más tarde',
+          retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)
+        },
+        { 
+          status: 429,
+          headers: {
+            'Retry-After': String(Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000))
+          }
+        }
+      )
+    }
+
     const { nombre_usuario, contrasena } = await request.json()
 
     if (!nombre_usuario || !contrasena) {
@@ -68,15 +98,19 @@ export async function POST(request: Request) {
 
     const token = jwt.sign(tokenData, jwtSecret, { expiresIn: '7d' })
 
-    // 5. Respuesta sin la contraseña
+    // 5. Respuesta sin la contraseña, con cookie httpOnly
     const { contrasena: _, ...userWithoutContrasena } = user
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: 'Login exitoso',
-      token,
       user: userWithoutContrasena,
     })
+
+    // Set the httpOnly cookie
+    response.cookies.set('auth_token', token, COOKIE_OPTIONS)
+
+    return response
   } catch (error) {
     console.error('Error en login:', error)
     return NextResponse.json(

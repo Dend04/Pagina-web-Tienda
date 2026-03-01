@@ -37,34 +37,55 @@ export function MainHeader() {
 
   // Cargar usuario y favoritos al montar
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    const token = localStorage.getItem("token");
-    if (storedUser) {
+    const checkAuth = async () => {
       try {
-        const parsed = JSON.parse(storedUser);
-        setUser({
-          nombre_usuario: parsed.nombre_usuario,
-          correo: parsed.correo,
-          imagen: parsed.imagen,
-          rol: parsed.rol,
+        // Verificar autenticación usando la cookie httpOnly
+        const res = await fetch('/api/auth/verify', {
+          credentials: 'include'
         });
-        if (token) {
-          loadFavoritos();
+        
+        if (!res.ok) {
+          // No autenticado
+          return;
         }
-      } catch (e) {
-        console.error("Error parsing user from localStorage", e);
+        
+        const data = await res.json();
+        
+        if (!data.authenticated) {
+          return;
+        }
+        
+        // Cargar datos del usuario desde localStorage
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          try {
+            const parsed = JSON.parse(storedUser);
+            setUser({
+              nombre_usuario: parsed.nombre_usuario,
+              correo: parsed.correo,
+              imagen: parsed.imagen,
+              rol: parsed.rol,
+            });
+            // Cargar favoritos ya que está autenticado
+            loadFavoritos();
+          } catch (e) {
+            console.error("Error parsing user from localStorage", e);
+          }
+        }
+      } catch (error) {
+        console.error("Error verifying auth:", error);
       }
-    }
+    };
+    
+    checkAuth();
   }, [loadFavoritos]);
 
   // Fetch del contador de pedidos pendientes con React Query (polling cada 30s)
   const { data: pendientesCount = 0 } = useQuery({
     queryKey: ['pendientesCount', user?.rol],
     queryFn: async () => {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("No token");
       const res = await fetch('/api/pedidos/pendientes/count', {
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include', // La cookie se envía automáticamente
       });
       if (!res.ok) throw new Error("Error al obtener conteo");
       const data = await res.json();
@@ -75,7 +96,13 @@ export function MainHeader() {
     initialData: 0,
   });
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/logout", { method: "POST" });
+    } catch (error) {
+      console.error("Error en logout:", error);
+    }
+
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     logoutCart();

@@ -39,11 +39,8 @@ export default function AdminPedidosPage() {
   const cargarPendientes = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
       const res = await fetch('/api/pedidos/pendientes', {
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include', // Enviar cookies automáticamente
       });
       const data = await res.json();
       if (res.ok) {
@@ -59,16 +56,13 @@ export default function AdminPedidosPage() {
   };
 
   const procesarPedido = async (id: number, accion: 'aceptar' | 'rechazar') => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
     try {
       const res = await fetch(`/api/pedidos/pendientes/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
         },
+        credentials: 'include', // Enviar cookies automáticamente
         body: JSON.stringify({ accion }),
       });
 

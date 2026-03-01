@@ -7,6 +7,7 @@ import SearchBar from "@/app/components/SearchBar";
 import ProductTable from "@/app/components/ProductTable";
 import ProductModal from "@/app/components/ProductModal";
 import DeleteProductModal from "@/app/components/DeleteProductModal";
+import { ProductTableSkeleton, Skeleton } from "@/app/components/Skeleton";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import { ProductListItem, ProductDetail } from "@/app/types/product";
 import { MainHeader } from "@/app/components/header";
@@ -154,8 +155,18 @@ export default function ProductosPage() {
     return (
       <div className="min-h-screen bg-pucara-white flex flex-col">
         <MainHeader />
-        <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 flex justify-center items-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pucara-primary"></div>
+        <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+            <div>
+              <Skeleton className="h-8 w-64 mb-2" />
+              <Skeleton className="h-4 w-48" />
+            </div>
+            <Skeleton className="h-10 w-40 rounded-full" />
+          </div>
+
+          <Skeleton className="h-10 w-full mb-6 rounded-lg" />
+
+          <ProductTableSkeleton rows={8} />
         </main>
         <Footer />
       </div>

@@ -32,20 +32,42 @@ export default function PerfilPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    const token = localStorage.getItem("token");
-    if (!storedUser || !token) {
-      router.push("/login");
-      return;
-    }
-    try {
-      setUser(JSON.parse(storedUser));
-    } catch (e) {
-      console.error("Error parsing user", e);
-      router.push("/login");
-    } finally {
-      setLoading(false);
-    }
+    const checkAuth = async () => {
+      try {
+        // Verificar autenticación usando la cookie httpOnly
+        const res = await fetch('/api/auth/verify', {
+          credentials: 'include' // Important: include cookies
+        });
+        
+        if (!res.ok) {
+          router.push('/login');
+          return;
+        }
+        
+        const data = await res.json();
+        
+        if (!data.authenticated) {
+          router.push('/login');
+          return;
+        }
+        
+        // Still get full user data from localStorage for display
+        const storedUser = localStorage.getItem('user');
+        if (!storedUser) {
+          router.push('/login');
+          return;
+        }
+        
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error('Error verifying auth:', error);
+        router.push('/login');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    checkAuth();
   }, [router]);
 
   if (loading) {

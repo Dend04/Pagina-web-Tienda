@@ -15,11 +15,8 @@ export default function HistorialAdmin() {
   const cargarPedidos = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("No autenticado");
-
       const res = await fetch("/api/admin/historial", {
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include', // Enviar cookies automáticamente
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Error al cargar");

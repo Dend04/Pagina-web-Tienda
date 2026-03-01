@@ -29,7 +29,7 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        localStorage.setItem("token", data.token);
+        // Store user data in localStorage (token is in httpOnly cookie)
         localStorage.setItem("user", JSON.stringify(data.user));
         router.push("/");
       } else {

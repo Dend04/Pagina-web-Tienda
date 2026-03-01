@@ -9,6 +9,7 @@ import { ProductCard } from "@/app/components/ProductCard";
 import { Footer } from "@/app/components/Footer";
 import { ProductListItem } from "./types/product";
 import { MainHeader } from "./components/header";
+import { ProductGridSkeleton, CarouselSkeleton, Skeleton } from "./components/Skeleton";
 
 // Datos de ejemplo para los carruseles (podrían venir también de la API)
 const featuredProducts: ProductListItem[] = [
@@ -151,8 +152,24 @@ export default function Dashboard() {
           </h2>
 
           {status === 'pending' ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pucara-primary"></div>
+            <div className="space-y-12">
+              {/* Skeleton for featured carousel */}
+              <section>
+                <Skeleton className="h-8 w-48 mb-6" />
+                <CarouselSkeleton items={4} />
+              </section>
+
+              {/* Skeleton for offers carousel */}
+              <section>
+                <Skeleton className="h-8 w-48 mb-6" />
+                <CarouselSkeleton items={3} />
+              </section>
+
+              {/* Skeleton for products grid */}
+              <section>
+                <Skeleton className="h-8 w-48 mb-6" />
+                <ProductGridSkeleton count={8} />
+              </section>
             </div>
           ) : status === 'error' ? (
             <p className="text-center text-red-500 py-12">Error: {error.message}</p>

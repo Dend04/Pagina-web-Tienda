@@ -1,21 +1,16 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET!;
+import { getUserFromToken } from '@/lib/auth';
 
 export async function GET(request: Request) {
   try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader) {
-      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    const user = getUserFromToken(request);
+    if (!user) {
+      return NextResponse.json({ count: 0 });
     }
-
-    const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
     
     // Solo comercial puede ver el contador
-    if (decoded.rol !== 'comercial') {
+    if (user.rol !== 'comercial') {
       return NextResponse.json({ count: 0 });
     }
 

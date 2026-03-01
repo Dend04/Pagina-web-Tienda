@@ -21,9 +21,10 @@ export const WhatsAppButton = ({ items, total, className, disabled, onPedidoCrea
   };
 
   const handleClick = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      window.location.href = "/login";
+    // Verificar autenticación primero
+    const authRes = await fetch('/api/auth/verify', { credentials: 'include' });
+    if (!authRes.ok) {
+      window.location.href = '/login';
       return;
     }
 
@@ -33,8 +34,8 @@ export const WhatsAppButton = ({ items, total, className, disabled, onPedidoCrea
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: 'include', // Enviar cookies automáticamente
         body: JSON.stringify({
           items: items.map(item => ({
             nombre: item.name,

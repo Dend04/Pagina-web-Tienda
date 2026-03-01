@@ -1,23 +1,14 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET!;
+import { getUserFromToken } from '@/lib/auth';
 
 export async function GET(request: Request) {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader) {
+  const user = getUserFromToken(request);
+  if (!user) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 
-  const token = authHeader.split(' ')[1];
-  let usuarioId: number;
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
-    usuarioId = decoded.id;
-  } catch {
-    return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
-  }
+  const usuarioId = user.id;
 
   const { data } = await supabaseAdmin
     .from('historial_compras')

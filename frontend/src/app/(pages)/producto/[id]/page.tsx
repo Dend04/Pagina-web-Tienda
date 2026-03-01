@@ -62,11 +62,9 @@ export default function ProductDetailPage() {
   useEffect(() => {
     if (!product) return;
     const checkFavorito = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
       try {
         const res = await fetch("/api/favoritos", {
-          headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include', // Enviar cookies automáticamente
         });
         const data = await res.json();
         if (res.ok && data.favoritos) {
@@ -84,9 +82,10 @@ export default function ProductDetailPage() {
   }
 
   const toggleFavorito = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      window.location.href = "/login";
+    // Verificar autenticación primero
+    const authRes = await fetch('/api/auth/verify', { credentials: 'include' });
+    if (!authRes.ok) {
+      window.location.href = '/login';
       return;
     }
     setLoadingFav(true);
@@ -95,8 +94,8 @@ export default function ProductDetailPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: 'include', // Enviar cookies automáticamente
         body: JSON.stringify({ producto_id: product.id }),
       });
       const data = await res.json();
@@ -110,11 +109,11 @@ export default function ProductDetailPage() {
     }
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     // Verificar autenticación
-    const token = localStorage.getItem("token");
-    if (!token) {
-      window.location.href = "/login";
+    const authRes = await fetch('/api/auth/verify', { credentials: 'include' });
+    if (!authRes.ok) {
+      window.location.href = '/login';
       return;
     }
 

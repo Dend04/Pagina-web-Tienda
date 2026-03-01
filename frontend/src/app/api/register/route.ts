@@ -2,6 +2,7 @@
 import { createClient } from '@supabase/supabase-js';
 import bcrypt from 'bcryptjs';
 import { NextResponse } from 'next/server';
+import { checkRateLimit, getClientIp, RATE_LIMITS } from '@/lib/rateLimit';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,6 +11,26 @@ const supabaseAdmin = createClient(
 
 export async function POST(request: Request) {
   try {
+    // Rate limiting check
+    const clientIp = getClientIp(request.headers);
+    const rateLimitResult = checkRateLimit(clientIp, RATE_LIMITS.REGISTER);
+    
+    if (rateLimitResult.isLimited) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Demasiados registros. Intenta de nuevo más tarde',
+          retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)
+        },
+        { 
+          status: 429,
+          headers: {
+            'Retry-After': String(Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000))
+          }
+        }
+      );
+    }
+
     const { 
       username, email, password, telefono, direccion, rol, imagen,
       nit, nombre_negocio, provincia, municipio,

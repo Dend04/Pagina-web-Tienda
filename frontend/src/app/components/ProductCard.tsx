@@ -26,9 +26,10 @@ export const ProductCard = ({ product }: ProductCardProps) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const token = localStorage.getItem("token");
-    if (!token) {
-      window.location.href = "/login";
+    // Verificar autenticación primero
+    const authRes = await fetch('/api/auth/verify', { credentials: 'include' });
+    if (!authRes.ok) {
+      window.location.href = '/login';
       return;
     }
 
@@ -38,8 +39,8 @@ export const ProductCard = ({ product }: ProductCardProps) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: 'include', // Enviar cookies automáticamente
         body: JSON.stringify({ producto_id: product.id }),
       });
       const data = await res.json();
@@ -69,13 +70,14 @@ export const ProductCard = ({ product }: ProductCardProps) => {
     });
   };
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const token = localStorage.getItem("token");
-    if (!token) {
-      window.location.href = "/login";
+    // Verificar autenticación primero
+    const authRes = await fetch('/api/auth/verify', { credentials: 'include' });
+    if (!authRes.ok) {
+      window.location.href = '/login';
       return;
     }
 

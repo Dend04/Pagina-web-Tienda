@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
-import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET!;
+import { getUserFromToken } from '@/lib/auth';
 
 export async function PATCH(
   request: Request,
@@ -11,22 +9,13 @@ export async function PATCH(
   try {
     const { id } = await params;
     const { accion } = await request.json();
-    const authHeader = request.headers.get('authorization');
+    const user = getUserFromToken(request);
 
-    if (!authHeader) {
+    if (!user) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const token = authHeader.split(' ')[1];
-    let rol: string;
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET) as any;
-      rol = decoded.rol;
-    } catch {
-      return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
-    }
-
-    if (rol !== 'comercial') {
+    if (user.rol !== 'comercial') {
       return NextResponse.json({ error: 'Acceso denegado' }, { status: 403 });
     }
 
