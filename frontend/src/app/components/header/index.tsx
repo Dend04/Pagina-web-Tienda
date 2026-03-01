@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { ChartBarIcon, CubeIcon } from "@heroicons/react/24/outline";
+import { useQuery } from "@tanstack/react-query";
 
 import { AppLogo } from "./AppLogo";
 import { HeaderMenu, NavigationItem } from "./HeaderMenu";
@@ -29,7 +31,6 @@ export function MainHeader() {
   const router = useRouter();
   const [user, setUser] = useState<UserData | null>(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [pendientesCount, setPendientesCount] = useState(0);
 
   const logoutCart = useCartStore((state) => state.logout);
   const { loadFavoritos, setFavoritos } = useFavoritosStore();
@@ -56,29 +57,23 @@ export function MainHeader() {
     }
   }, [loadFavoritos]);
 
-  // Fetch del contador de pedidos pendientes (solo comercial)
-  useEffect(() => {
-    const fetchPendientesCount = async () => {
-      if (!user || user.rol !== 'comercial') return;
+  // Fetch del contador de pedidos pendientes con React Query (polling cada 30s)
+  const { data: pendientesCount = 0 } = useQuery({
+    queryKey: ['pendientesCount', user?.rol],
+    queryFn: async () => {
       const token = localStorage.getItem("token");
-      if (!token) return;
-      try {
-        const res = await fetch('/api/pedidos/pendientes/count', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        if (res.ok) {
-          setPendientesCount(data.count || 0);
-        }
-      } catch (error) {
-        console.error('Error obteniendo conteo de pendientes:', error);
-      }
-    };
-
-    fetchPendientesCount();
-    const interval = setInterval(fetchPendientesCount, 30000);
-    return () => clearInterval(interval);
-  }, [user]);
+      if (!token) throw new Error("No token");
+      const res = await fetch('/api/pedidos/pendientes/count', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Error al obtener conteo");
+      const data = await res.json();
+      return data.count || 0;
+    },
+    enabled: !!user && user.rol === 'comercial',
+    refetchInterval: 30000, // Equivalente al setInterval anterior
+    initialData: 0,
+  });
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -122,7 +117,7 @@ export function MainHeader() {
               {user ? (
                 <UserMenu user={user} onLogoutClick={() => setShowLogoutModal(true)} />
               ) : (
-                <a
+                <Link
                   href="/login"
                   className="group flex items-center gap-2 hover:opacity-85 transition-opacity"
                 >
@@ -146,7 +141,7 @@ export function MainHeader() {
                     Iniciar sesión
                   </span>
                   <span className="sr-only">Acceder a tu cuenta</span>
-                </a>
+                </Link>
               )}
             </div>
           </div>

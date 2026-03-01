@@ -1,32 +1,27 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 
 export default function TestPage() {
-  const [status, setStatus] = useState('Probando conexión...')
-  const [count, setCount] = useState<number | null>(null)
+  const { data, error, isLoading } = useQuery({
+    queryKey: ['testDb'],
+    queryFn: async () => {
+      const res = await fetch('/api/test-db')
+      if (!res.ok) throw new Error('Error en la petición')
+      return res.json()
+    },
+  })
 
-  useEffect(() => {
-    fetch('/api/test-db')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          setStatus(data.message)
-          setCount(data.count)
-        } else {
-          setStatus(`❌ Error: ${data.error}`)
-        }
-      })
-      .catch(err => setStatus(`❌ Error de red: ${err.message}`))
-  }, [])
+  if (isLoading) return <div className="p-8">Cargando...</div>
+  if (error) return <div className="p-8">❌ Error: {error.message}</div>
 
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-4">Test de Conexión Supabase</h1>
-      <p className="mb-2">{status}</p>
-      {count !== null && (
+      <p className="mb-2">{data.message}</p>
+      {data.count !== undefined && (
         <p className="text-green-600">
-          ✅ Total de productos: {count}
+          ✅ Total de productos: {data.count}
         </p>
       )}
     </div>
